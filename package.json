@@ -12,6 +12,7 @@
     "build:client": "cd client && npm run build",
     "start": "node dist/server/index.js",
     "lint": "eslint \"**/*.{ts,tsx}\"",
+    "typecheck": "tsc --noEmit",
     "test": "vitest"
   },
   "dependencies": {
