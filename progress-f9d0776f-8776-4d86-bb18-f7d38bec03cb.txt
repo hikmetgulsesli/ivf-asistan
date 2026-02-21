@@ -1,0 +1,5 @@
+=== US-001: Project Setup and Design Tokens ===
+COMPLETED: 2026-02-22T00:38:00+03:00
+FILES CHANGED: .gitignore, .env.example, client/src/index.css, client/src/App.tsx, client/tailwind.config.js, src/server/index.ts
+KEY DECISIONS: Used Emerald/Cyan palette per design-standards.md, Sora/Nunito Sans font pair, CSS custom properties for design tokens
+DEPENDENCIES ADDED: none (client dependencies installed via npm install)
