@@ -62,7 +62,8 @@ export async function updateFAQ(id: number, input: FAQUpdateInput): Promise<FAQ 
   const pool = getPool();
   
   const updates: string[] = [];
-  const values: (string | number)[] = [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const values: any[] = [];
   let paramIndex = 1;
 
   if (input.question !== undefined) {

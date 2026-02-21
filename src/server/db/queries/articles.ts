@@ -68,7 +68,8 @@ export async function updateArticle(id: number, input: ArticleUpdateInput): Prom
   const pool = getPool();
   
   const updates: string[] = [];
-  const values: (string | number | string[])[] = [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const values: any[] = [];
   let paramIndex = 1;
 
   if (input.title !== undefined) {
