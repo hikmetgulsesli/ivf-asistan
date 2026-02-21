@@ -1,0 +1,91 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Articles table - knowledge base articles
+model Article {
+  id        Int       @id @default(autoincrement())
+  title     String    @db.VarChar(500)
+  content   String    @db.Text
+  category  String    @db.VarChar(100)
+  tags      String[]  @default([])
+  embedding Json?     // float[] stored as JSON, cosine similarity at app layer
+  status    String    @default("draft") @db.VarChar(20) // draft, published, archived
+  createdAt DateTime @default(now()) @db.Timestamptz
+  updatedAt DateTime @default(now()) @db.Timestamptz
+
+  @@index([category])
+  @@index([status])
+  @@map("articles")
+}
+
+// FAQs table - frequently asked questions
+model Faq {
+  id         Int       @id @default(autoincrement())
+  question   String    @db.VarChar(1000)
+  answer     String    @db.Text
+  category   String    @db.VarChar(100)
+  sortOrder  Int       @default(0)
+  embedding  Json?     // float[] stored as JSON, cosine similarity at app layer
+  createdAt  DateTime @default(now()) @db.Timestamptz
+
+  @@index([category])
+  @@index([sortOrder])
+  @@map("faqs")
+}
+
+// Videos table - video content with summaries
+model Video {
+  id             Int       @id @default(autoincrement())
+  title          String    @db.VarChar(500)
+  url            String    @db.VarChar(2000)
+  summary        String?   @db.Text // Kimi K2.5 video understanding summary
+  keyTopics      Json?     // string[] - ["OHSS", "yumurta toplama"]
+  timestamps     Json?     // [{"time": "02:14", "topic": "..."}]
+  category       String    @db.VarChar(100)
+  durationSeconds Int?
+  embedding      Json?     // float[] stored as JSON, cosine similarity at app layer
+  analysisStatus String    @default("pending") @db.VarChar(20) // pending, processing, done, failed
+  createdAt      DateTime  @default(now()) @db.Timestamptz
+
+  @@index([category])
+  @@index([analysisStatus])
+  @@map("videos")
+}
+
+// Conversations table - chat history (anonymized)
+model Conversation {
+  id        Int       @id @default(autoincrement())
+  sessionId String    @db.VarChar(100) // anonymous session identifier
+  role      String    @db.VarChar(20) // user, assistant
+  content   String    @db.Text
+  sources   Json?     // [{type: 'article', id: 1, title: '...'}]
+  sentiment String?   @db.VarChar(20) // calm, anxious, fearful, hopeful
+  createdAt DateTime  @default(now()) @db.Timestamptz
+
+  @@index([sessionId])
+  @@index([createdAt])
+  @@map("conversations")
+}
+
+// Response cache table - cached RAG responses
+model ResponseCache {
+  id          Int       @id @default(autoincrement())
+  queryHash   String    @unique @db.VarChar(64)
+  queryText   String    @db.Text
+  response    String    @db.Text
+  sources     Json?     // cached sources
+  hitCount    Int       @default(1)
+  createdAt   DateTime  @default(now()) @db.Timestamptz
+  expiresAt   DateTime  @db.Timestamptz
+
+  @@index([expiresAt])
+  @@map("response_cache")
+}
