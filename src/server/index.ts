@@ -6,6 +6,8 @@ import { initializeAdmin } from '../services/auth-service';
 import adminAuthRoutes from '../routes/admin/auth';
 import adminRoutes from '../routes/admin/index';
 import { errorHandler } from '../middleware/error-handler';
+import cacheRouter from './routes/admin-cache.js';
+import videosRouter from './routes/videos.js';
 
 dotenv.config();
 
@@ -23,6 +25,8 @@ app.get('/api/health', (_req, res) => {
 
 app.use('/api/admin/auth', adminAuthRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/admin/videos', videosRouter);
+app.use('/api/admin', cacheRouter);
 app.use(errorHandler);
 
 async function start() {
