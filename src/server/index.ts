@@ -1,16 +1,15 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { config } from '../config';
-import { initializeAdmin } from '../services/auth-service';
-import adminAuthRoutes from '../routes/admin/auth';
-import adminRoutes from '../routes/admin/index';
-import { errorHandler } from '../middleware/error-handler';
+import { config } from '../config/index.js';
+import { initializeAdmin } from '../services/auth-service.js';
+import adminAuthRoutes from '../routes/admin/auth.js';
+import adminRoutes from '../routes/admin/index.js';
+import { errorHandler } from '../middleware/error-handler.js';
 
 dotenv.config();
 
 const app = express();
-const PORT = config.port;
 
 app.use(cors({
   origin: config.corsOrigins,
@@ -30,8 +29,8 @@ async function start() {
     await initializeAdmin();
     console.log('Admin user initialized');
 
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
+    app.listen(config.port, () => {
+      console.log(`Server running on port ${config.port}`);
     });
   } catch (error) {
     console.error('Failed to start server:', error);

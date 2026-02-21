@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { AppError } from '../utils/errors';
+import { AppError } from '../utils/errors.js';
 
 export function errorHandler(
   err: Error,
@@ -19,16 +19,7 @@ export function errorHandler(
     return;
   }
 
-  if (err instanceof SyntaxError && (err as any).status === 400 && 'body' in err) {
-    res.status(400).json({
-      error: {
-        code: 'JSON_ERROR',
-        message: 'Invalid JSON in request body',
-      },
-    });
-    return;
-  }
-
+  // Generic error response
   res.status(500).json({
     error: {
       code: 'INTERNAL_ERROR',

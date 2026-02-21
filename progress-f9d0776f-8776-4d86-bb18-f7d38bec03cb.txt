@@ -1,0 +1,24 @@
+=== US-008: Response Caching System ===
+COMPLETED: 2026-02-22T01:57:22+03:00
+FILES CHANGED:
+- src/server/services/cache.ts (new)
+- src/server/services/cache.test.ts (new)
+- src/server/routes/admin-cache.ts (new)
+- src/server/routes/videos.ts (modified - added cache invalidation)
+- src/server/db/connection.ts (new)
+- src/server/db/queries/videos.ts (new)
+- src/server/db/queries/articles.ts (new)
+- src/server/db/queries/faqs.ts (new)
+- src/server/db/types.ts (new)
+- src/server/index.ts (modified - added routes)
+- package.json (modified - added prisma deps)
+- package-lock.json (new)
+
+KEY DECISIONS:
+- Used SHA-256 for query hash normalization
+- TTL configurable via CACHE_TTL_HOURS env var (default 24h)
+- Cache invalidation triggered on video creation (new content)
+- Hit count incremented on cache retrieval
+- Statistics include total entries, total hits, expired entries, hit rate, average hit count
+
+DEPENDENCIES ADDED: @prisma/client, @prisma/adapter-pg, prisma, pg

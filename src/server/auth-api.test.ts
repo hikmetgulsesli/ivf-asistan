@@ -15,7 +15,7 @@ describe('POST /api/admin/auth/login', () => {
 
     expect(response.status).toBe(200);
     expect(response.body.data).toHaveProperty('token');
-    expect(response.body.data.user.username).toBe('admin');
+    expect(response.body.data.admin.username).toBe('admin');
   });
 
   it('returns 401 on invalid credentials', async () => {
