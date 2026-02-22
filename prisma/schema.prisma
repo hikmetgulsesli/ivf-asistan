@@ -1,0 +1,84 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Article {
+  id        Int      @id @default(autoincrement())
+  title     String   @db.VarChar(500)
+  content   String   @db.Text
+  category  String   @db.VarChar(100)
+  tags      String[]
+  embedding Json?    @db.JsonB
+  status    String   @default("draft") @db.VarChar(20)
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("articles")
+  @@index([category])
+  @@index([status])
+}
+
+model FAQ {
+  id        Int      @id @default(autoincrement())
+  question  String   @db.VarChar(1000)
+  answer    String   @db.Text
+  category  String   @db.VarChar(100)
+  sortOrder Int      @default(0)
+  embedding Json?    @db.JsonB
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("faqs")
+  @@index([category])
+}
+
+model Video {
+  id              Int      @id @default(autoincrement())
+  title           String   @db.VarChar(500)
+  url             String   @db.VarChar(2000)
+  summary         String?  @db.Text
+  keyTopics       Json?    @db.JsonB
+  timestamps      Json?    @db.JsonB
+  category        String   @db.VarChar(100)
+  durationSeconds Int?
+  embedding       Json?    @db.JsonB
+  analysisStatus  String   @default("pending") @db.VarChar(20)
+  createdAt       DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("videos")
+  @@index([category])
+  @@index([analysisStatus])
+}
+
+model Conversation {
+  id        Int      @id @default(autoincrement())
+  sessionId String   @db.VarChar(100)
+  role      String   @db.VarChar(20)
+  content   String   @db.Text
+  sources   Json?    @db.JsonB
+  sentiment String?  @db.VarChar(20)
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("conversations")
+  @@index([sessionId])
+  @@index([createdAt])
+}
+
+model ResponseCache {
+  id         Int      @id @default(autoincrement())
+  queryHash  String   @unique @db.VarChar(64)
+  queryText  String   @db.Text
+  response   String   @db.Text
+  sources    Json?    @db.JsonB
+  hitCount   Int      @default(1)
+  createdAt  DateTime @default(now()) @db.Timestamptz(6)
+  expiresAt  DateTime @db.Timestamptz(6)
+
+  @@map("response_cache")
+  @@index([queryHash])
+  @@index([expiresAt])
+}
