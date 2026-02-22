@@ -7,6 +7,15 @@ const router = express.Router();
 export function createAdminRouter(pool: Pool): express.Router {
   router.use(authMiddleware);
 
+  router.get('/status', async (_req, res) => {
+    res.json({
+      data: {
+        authenticated: true,
+        username: 'admin',
+      },
+    });
+  });
+
   router.get('/stats', async (_req, res, next) => {
     try {
       const [articleCount, faqCount, videoCount, conversationCount, cacheStats] = await Promise.all([

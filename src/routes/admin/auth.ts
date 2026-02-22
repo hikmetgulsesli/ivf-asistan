@@ -42,7 +42,7 @@ export function createAdminAuthRouter(_pool: Pool): express.Router {
       res.json({
         data: {
           token,
-          admin: {
+          user: {
             id: admin.id,
             username: admin.username,
           },
