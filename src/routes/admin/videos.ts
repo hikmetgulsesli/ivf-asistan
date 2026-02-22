@@ -1,4 +1,5 @@
 import { Router, Response, NextFunction } from 'express';
+import { Pool } from 'pg';
 import { authMiddleware, AuthenticatedRequest } from '../../middleware/auth';
 import * as videoService from '../../services/video-service';
 import { generateEmbedding } from '../../services/embedding-service';
@@ -243,5 +244,10 @@ router.delete('/:id', async (req: AuthenticatedRequest, res: Response, next: Nex
     next(error);
   }
 });
+
+// Factory function to create router with pool (for compatibility)
+export function createVideoRouter(_pool: Pool): Router {
+  return router;
+}
 
 export default router;

@@ -21,4 +21,18 @@ router.post('/', async (req: AuthenticatedRequest, res: Response, next: NextFunc
   }
 });
 
+// GET /api/admin/reindex - Also supports GET for compatibility
+router.get('/', async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const result = await reindexAllContent();
+    
+    res.json({
+      data: result,
+      message: `Reindexed ${result.articles} articles, ${result.faqs} FAQs, ${result.videos} videos`,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;

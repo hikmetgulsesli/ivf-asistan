@@ -9,12 +9,30 @@ export class AppError extends Error {
   }
 }
 
-export class ValidationError extends AppError {
-  public readonly field: string;
+export interface ValidationFieldError {
+  field: string;
+  message: string;
+}
 
-  constructor(field: string, message: string) {
-    super('VALIDATION_ERROR', message, 400);
-    this.field = field;
+export class ValidationError extends AppError {
+  public readonly field?: string;
+  public readonly errors?: ValidationFieldError[];
+
+  constructor(field: string | ValidationFieldError[], message?: string | ValidationFieldError[]) {
+    // Handle the case where message is actually the errors array (legacy calls)
+    if (Array.isArray(message)) {
+      super('VALIDATION_ERROR', field as string, 400);
+      this.errors = message;
+      return;
+    }
+    
+    if (Array.isArray(field)) {
+      super('VALIDATION_ERROR', 'Validation failed', 400);
+      this.errors = field;
+    } else {
+      super('VALIDATION_ERROR', message || 'Validation failed', 400);
+      this.field = field;
+    }
   }
 }
 

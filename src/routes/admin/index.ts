@@ -2,6 +2,7 @@ import express from 'express';
 import { Pool } from 'pg';
 import { authMiddleware } from '../../middleware/auth';
 import { createVideoRouter } from './videos';
+import { reindexAllContent } from '../../services/search-service';
 
 const router = express.Router();
 
@@ -77,13 +78,32 @@ export function createAdminRouter(pool: Pool): express.Router {
     }
   });
 
-  router.post('/reindex', async (_req, res) => {
-    res.json({
-      data: {
-        status: 'queued',
-        message: 'Reindexing job queued. This feature is not yet implemented.',
-      },
-    });
+  // POST /api/admin/reindex - Reindex all content (regenerate all embeddings)
+  router.post('/reindex', async (_req, res, next) => {
+    try {
+      const result = await reindexAllContent();
+      
+      res.json({
+        data: result,
+        message: `Reindexed ${result.articles} articles, ${result.faqs} FAQs, ${result.videos} videos`,
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // GET /api/admin/reindex - Also supports GET for compatibility
+  router.get('/reindex', async (_req, res, next) => {
+    try {
+      const result = await reindexAllContent();
+      
+      res.json({
+        data: result,
+        message: `Reindexed ${result.articles} articles, ${result.faqs} FAQs, ${result.videos} videos`,
+      });
+    } catch (error) {
+      next(error);
+    }
   });
 
   router.delete('/cache', async (req, res, next) => {
