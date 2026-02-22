@@ -15,7 +15,7 @@ describe('POST /api/admin/auth/login', () => {
 
     expect(response.status).toBe(200);
     expect(response.body.data).toHaveProperty('token');
-    expect(response.body.data.user.username).toBe('admin');
+    expect(response.body.data.admin.username).toBe('admin');
   });
 
   it('returns 401 on invalid credentials', async () => {
@@ -51,14 +51,14 @@ describe('Protected Admin Routes', () => {
 
   it('returns 401 without valid JWT', async () => {
     const response = await request(app)
-      .get('/api/admin/status');
+      .get('/api/admin/stats');
 
     expect(response.status).toBe(401);
   });
 
   it('returns 401 with invalid JWT', async () => {
     const response = await request(app)
-      .get('/api/admin/status')
+      .get('/api/admin/stats')
       .set('Authorization', 'Bearer invalid-token');
 
     expect(response.status).toBe(401);
@@ -72,11 +72,11 @@ describe('Protected Admin Routes', () => {
     const token = loginResponse.body.data.token;
 
     const response = await request(app)
-      .get('/api/admin/status')
+      .get('/api/admin/stats')
       .set('Authorization', `Bearer ${token}`);
 
     expect(response.status).toBe(200);
-    expect(response.body.data.authenticated).toBe(true);
-    expect(response.body.data.username).toBe('admin');
+    expect(response.body.data).toHaveProperty('articles');
+    expect(response.body.data).toHaveProperty('faqs');
   });
 });

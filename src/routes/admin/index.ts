@@ -13,9 +13,9 @@ export function createAdminRouter(pool: Pool): express.Router {
       const [articleCount, faqCount, videoCount, conversationCount, cacheStats] = await Promise.all([
         pool.query('SELECT COUNT(*) as count FROM articles WHERE status = $1', ['published']),
         pool.query('SELECT COUNT(*) as count FROM faqs'),
-        pool.query('SELECT COUNT(*) as count FROM videos WHERE analysis_status = $1', ['done']),
-        pool.query('SELECT COUNT(DISTINCT session_id) as count FROM conversations'),
-        pool.query('SELECT COUNT(*) as total, COALESCE(SUM(hit_count), 0) as total_hits FROM response_cache'),
+        pool.query('SELECT COUNT(*) as count FROM videos WHERE "analysisStatus" = $1', ['done']),
+        pool.query('SELECT COUNT(DISTINCT "sessionId") as count FROM conversations'),
+        pool.query('SELECT COUNT(*) as total, COALESCE(SUM("hitCount"), 0) as total_hits FROM response_cache'),
       ]);
 
       const totalEntries = parseInt(cacheStats.rows[0].total);
@@ -56,9 +56,9 @@ export function createAdminRouter(pool: Pool): express.Router {
       }
 
       const result = await pool.query(
-        `SELECT DISTINCT session_id, MAX(created_at) as last_activity
+        `SELECT DISTINCT "sessionId", MAX("createdAt") as last_activity
          FROM conversations
-         GROUP BY session_id
+         GROUP BY "sessionId"
          ORDER BY last_activity DESC
          LIMIT $1 OFFSET $2`,
         [limitNum, offsetNum]
@@ -92,7 +92,7 @@ export function createAdminRouter(pool: Pool): express.Router {
 
       const result = await pool.query(
         pattern
-          ? 'DELETE FROM response_cache WHERE query_text ILIKE $1'
+          ? 'DELETE FROM response_cache WHERE "queryText" ILIKE $1'
           : 'DELETE FROM response_cache',
         pattern ? [`%${pattern}%`] : []
       );
@@ -113,8 +113,8 @@ export function createAdminRouter(pool: Pool): express.Router {
       const statsResult = await pool.query(
         `SELECT
           COUNT(*) AS total,
-          COALESCE(SUM(hit_count), 0) AS total_hits,
-          COUNT(*) FILTER (WHERE expires_at <= NOW()) AS expired
+          COALESCE(SUM("hitCount"), 0) AS total_hits,
+          COUNT(*) FILTER (WHERE "expiresAt" <= NOW()) AS expired
         FROM response_cache`
       );
 
