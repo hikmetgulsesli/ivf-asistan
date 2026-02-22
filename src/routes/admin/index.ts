@@ -1,10 +1,10 @@
 import express from 'express';
 import { Pool } from 'pg';
-import { authMiddleware, AuthenticatedRequest } from '../../middleware/auth';
-import { createVideosRouter } from './videos';
-import { createArticlesRouter } from './articles';
-import { createFaqsRouter } from './faqs';
-import { SearchService } from '../../services/search-service';
+import { authMiddleware, AuthenticatedRequest } from '../../middleware/auth.js';
+import { createVideosRouter } from './videos.js';
+import { createArticlesRouter } from './articles.js';
+import { createFaqsRouter } from './faqs.js';
+import { SearchService } from '../../services/search-service.js';
 
 export function createAdminRouter(pool: Pool): express.Router {
   const router = express.Router();

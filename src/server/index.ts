@@ -2,14 +2,14 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { Pool } from 'pg';
-import { config } from '../config/index';
-import { errorHandler } from '../middleware/error-handler';
-import { createAdminAuthRouter } from '../routes/admin/auth';
-import { createAdminRouter } from '../routes/admin/index';
-import { createChatRouter } from '../routes/chat';
-import { createCategoriesRouter } from '../routes/categories';
-import { createSuggestionsRouter } from '../routes/suggestions';
-import { createFeedbackRouter } from '../routes/feedback';
+import { config } from '../config/index.js';
+import { errorHandler } from '../middleware/error-handler.js';
+import { createAdminAuthRouter } from '../routes/admin/auth.js';
+import { createAdminRouter } from '../routes/admin/index.js';
+import { createChatRouter } from '../routes/chat.js';
+import { createCategoriesRouter } from '../routes/categories.js';
+import { createSuggestionsRouter } from '../routes/suggestions.js';
+import { createFeedbackRouter } from '../routes/feedback.js';
 
 dotenv.config();
 
@@ -39,9 +39,12 @@ app.use('/api', createFeedbackRouter(pool));
 
 app.use(errorHandler);
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// Only start server if not in test mode
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
 
 process.on('SIGTERM', async () => {
   console.log('SIGTERM received, closing database connection...');

@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import { verifyToken, JwtPayload } from '../services/auth-service';
-import { UnauthorizedError } from '../utils/errors';
+import { verifyToken, JwtPayload } from '../services/auth-service.js';
+import { UnauthorizedError } from '../utils/errors.js';
 
 export interface AuthenticatedRequest extends Request {
   admin?: JwtPayload;

@@ -1,9 +1,9 @@
 import OpenAI from 'openai';
 import { Pool } from 'pg';
-import { CacheService } from './cache-service';
-import { EmbeddingService, ArticleRecord, FaqRecord, VideoRecord } from './embedding-service';
-import { SentimentService, Sentiment } from './sentiment-service';
-import { EmergencyService } from './emergency-service';
+import { CacheService } from './cache-service.js';
+import { EmbeddingService, ArticleRecord, FaqRecord, VideoRecord } from './embedding-service.js';
+import { SentimentService, Sentiment } from './sentiment-service.js';
+import { EmergencyService } from './emergency-service.js';
 
 const SYSTEM_PROMPT = `Sen bir tüp bebek (IVF) kliniğinin dijital hasta rehberisin.
 
