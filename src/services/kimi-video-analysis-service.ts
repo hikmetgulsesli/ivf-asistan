@@ -94,7 +94,12 @@ class KimiVideoAnalysisService {
         ],
         temperature: 0.3,
         max_tokens: 4000,
-      } as any);
+      } as {
+        model: string;
+        messages: { role: string; content: unknown }[];
+        temperature: number;
+        max_tokens: number;
+      });
 
       const chatResponse = response as { choices: Array<{ message: { content: string | null } }> };
       const content = chatResponse.choices[0]?.message?.content;
@@ -151,7 +156,7 @@ class KimiVideoAnalysisService {
 
     try {
       return JSON.parse(jsonStr) as VideoAnalysisResult;
-    } catch (error) {
+    } catch {
       console.error('[KimiVideoAnalysis] Failed to parse JSON:', jsonStr);
       throw new Error('Invalid JSON response from Kimi');
     }
