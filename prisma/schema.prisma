@@ -1,0 +1,83 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Article {
+  id        Int      @id @default(autoincrement())
+  title     String   @db.VarChar(500)
+  content   String   @db.Text
+  category  String   @db.VarChar(100)
+  tags      String[]
+  embedding Json?    @db.JsonB
+  status    String   @default("draft") @db.VarChar(20)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("articles")
+  @@index([category])
+  @@index([status])
+}
+
+model FAQ {
+  id        Int      @id @default(autoincrement())
+  question  String   @db.VarChar(1000)
+  answer    String   @db.Text
+  category  String   @db.VarChar(100)
+  sortOrder Int      @default(0) @map("sort_order")
+  embedding Json?    @db.JsonB
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@map("faqs")
+  @@index([category])
+}
+
+model Video {
+  id              Int      @id @default(autoincrement())
+  title           String   @db.VarChar(500)
+  url             String   @db.VarChar(2000)
+  summary         String?  @db.Text
+  keyTopics       Json?    @map("key_topics") @db.JsonB
+  timestamps      Json?    @db.JsonB
+  category        String   @db.VarChar(100)
+  durationSeconds Int?     @map("duration_seconds")
+  embedding       Json?    @db.JsonB
+  analysisStatus  String   @default("pending") @map("analysis_status") @db.VarChar(20)
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@map("videos")
+  @@index([category])
+  @@index([analysisStatus])
+}
+
+model Conversation {
+  id        Int      @id @default(autoincrement())
+  sessionId String   @map("session_id") @db.VarChar(100)
+  role      String   @db.VarChar(20)
+  content   String   @db.Text
+  sources   Json?    @db.JsonB
+  sentiment String?  @db.VarChar(20)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@map("conversations")
+  @@index([sessionId])
+  @@index([createdAt])
+}
+
+model ResponseCache {
+  id         Int      @id @default(autoincrement())
+  queryHash  String   @unique @map("query_hash") @db.VarChar(64)
+  queryText  String   @map("query_text") @db.Text
+  response   String   @db.Text
+  sources    Json?    @db.JsonB
+  hitCount   Int      @default(1) @map("hit_count")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  expiresAt  DateTime @map("expires_at") @db.Timestamptz(6)
+
+  @@map("response_cache")
+  @@index([expiresAt])
+}
