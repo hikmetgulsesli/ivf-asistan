@@ -1,29 +1,57 @@
-import { Router, Request, Response, NextFunction } from 'express';
-import { login } from '../../services/auth-service';
-import { AppError } from '../../utils/errors';
+import express from 'express';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import { Pool } from 'pg';
+import { config } from '../../config/index';
+import { UnauthorizedError, ValidationError } from '../../utils/errors';
 
-const router = Router();
+const router = express.Router();
 
-router.post('/login', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { username, password } = req.body;
+const admins = new Map<string, { id: string; username: string; passwordHash: string }>();
 
-    if (!username || !password) {
-      throw new AppError('VALIDATION_ERROR', 'Username and password are required', 400);
-    }
+const defaultAdminPassword = bcrypt.hashSync('ivf2024', 10);
+admins.set('admin', { id: '1', username: 'admin', passwordHash: defaultAdminPassword });
 
-    const result = await login({ username, password });
+export function createAdminAuthRouter(_pool: Pool): express.Router {
+  router.post('/auth/login', async (req, res, next) => {
+    try {
+      const { username, password } = req.body;
 
-    res.status(200).json({
-      data: result,
-    });
-  } catch (error) {
-    if (error instanceof Error && error.message === 'Invalid credentials') {
-      next(new AppError('AUTH_ERROR', 'Invalid username or password', 401));
-    } else {
+      if (!username || typeof username !== 'string') {
+        throw new ValidationError('username', 'Username is required');
+      }
+
+      if (!password || typeof password !== 'string') {
+        throw new ValidationError('password', 'Password is required');
+      }
+
+      const admin = admins.get(username);
+
+      if (!admin) {
+        throw new UnauthorizedError('Invalid username or password');
+      }
+
+      const isValidPassword = bcrypt.compareSync(password, admin.passwordHash);
+
+      if (!isValidPassword) {
+        throw new UnauthorizedError('Invalid username or password');
+      }
+
+      const token = jwt.sign({ id: admin.id }, config.jwtSecret, { expiresIn: '24h' });
+
+      res.json({
+        data: {
+          token,
+          admin: {
+            id: admin.id,
+            username: admin.username,
+          },
+        },
+      });
+    } catch (error) {
       next(error);
     }
-  }
-});
+  });
 
-export default router;
+  return router;
+}

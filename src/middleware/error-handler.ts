@@ -1,29 +1,30 @@
 import { Request, Response, NextFunction } from 'express';
-import { AppError } from '../utils/errors';
+import { AppError, ValidationError } from '../utils/errors';
 
 export function errorHandler(
-  err: Error,
+  error: Error | AppError | ValidationError,
   _req: Request,
   res: Response,
   _next: NextFunction
 ): void {
-  console.error('Error:', err);
+  console.error('Error:', error);
 
-  if (err instanceof AppError) {
-    res.status(err.statusCode).json({
+  if (error instanceof ValidationError) {
+    res.status(error.statusCode).json({
       error: {
-        code: err.code,
-        message: err.message,
+        code: error.code,
+        message: error.message,
+        field: error.field,
       },
     });
     return;
   }
 
-  if (err instanceof SyntaxError && (err as any).status === 400 && 'body' in err) {
-    res.status(400).json({
+  if (error instanceof AppError) {
+    res.status(error.statusCode).json({
       error: {
-        code: 'JSON_ERROR',
-        message: 'Invalid JSON in request body',
+        code: error.code,
+        message: error.message,
       },
     });
     return;
