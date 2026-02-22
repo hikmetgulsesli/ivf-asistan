@@ -1,16 +1,26 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { config } from '../config/index.js';
-import { initializeAdmin } from '../services/auth-service.js';
-import adminAuthRoutes from '../routes/admin/auth.js';
-import adminRoutes from '../routes/admin/index.js';
-import { errorHandler } from '../middleware/error-handler.js';
+import { Pool } from 'pg';
+import { config } from '../config/index';
+import { errorHandler } from '../middleware/error-handler';
+import { createAdminAuthRouter } from '../routes/admin/auth';
+import { createAdminRouter } from '../routes/admin/index';
+import { createContentRouter } from '../routes/admin/content';
+import { createAnalyticsRouter } from '../routes/admin/analytics';
+import { createChatRouter } from '../routes/chat';
+import { createCategoriesRouter } from '../routes/categories';
+import { createSuggestionsRouter } from '../routes/suggestions';
+import { createFeedbackRouter } from '../routes/feedback';
 
 dotenv.config();
 
 const app = express();
-const PORT = config.port;
+const PORT = process.env.PORT || config.port;
+
+const pool = new Pool({
+  connectionString: config.databaseUrl,
+});
 
 app.use(cors({
   origin: config.corsOrigins,
@@ -21,25 +31,33 @@ app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-app.use('/api/admin/auth', adminAuthRoutes);
-app.use('/api/admin', adminRoutes);
+app.use('/api/admin', createAdminAuthRouter(pool));
+app.use('/api/admin', createAdminRouter(pool));
+app.use('/api/admin', createContentRouter(pool));
+app.use('/api/admin', createAnalyticsRouter(pool));
+
+app.use('/api', createChatRouter(pool));
+app.use('/api', createCategoriesRouter(pool));
+app.use('/api', createSuggestionsRouter(pool));
+app.use('/api', createFeedbackRouter(pool));
+
 app.use(errorHandler);
 
-// Initialize admin and start server
-async function start() {
-  try {
-    await initializeAdmin();
-    console.log('Admin user initialized');
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
 
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-    });
-  } catch (error) {
-    console.error('Failed to start server:', error);
-    process.exit(1);
-  }
-}
+process.on('SIGTERM', async () => {
+  console.log('SIGTERM received, closing database connection...');
+  await pool.end();
+  process.exit(0);
+});
 
-start();
+process.on('SIGINT', async () => {
+  console.log('SIGINT received, closing database connection...');
+  await pool.end();
+  process.exit(0);
+});
 
 export default app;
+export { pool };
