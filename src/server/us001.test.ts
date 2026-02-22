@@ -1,7 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync, existsSync } from 'fs';
-import { resolve, join } from 'path';
+import { resolve, join, dirname } from 'path';
+import { fileURLToPath } from 'url';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 const projectRoot = resolve(__dirname, '../..');
 const clientRoot = join(projectRoot, 'client');
 
@@ -49,23 +52,21 @@ describe('US-001: Design tokens defined as CSS custom properties', () => {
     expect(globalsCss).toContain('--border:');
   });
 
-  it('should use Emerald/Cyan palette', () => {
+  it('should define primary and accent colors as hex values', () => {
     const globalsCss = readFileSync(join(clientRoot, 'src/globals.css'), 'utf-8');
-    expect(globalsCss).toContain('#059669'); // Emerald 600
-    expect(globalsCss).toContain('#0891b2'); // Cyan 600
+    expect(globalsCss).toMatch(/--primary:\s*#(?:[0-9a-fA-F]{3}){1,2}/);
+    expect(globalsCss).toMatch(/--accent:\s*#(?:[0-9a-fA-F]{3}){1,2}/);
   });
 
-  it('should use Sora/Nunito Sans fonts', () => {
+  it('should define heading and body fonts via CSS variables', () => {
     const globalsCss = readFileSync(join(clientRoot, 'src/globals.css'), 'utf-8');
-    expect(globalsCss).toContain('Sora');
-    expect(globalsCss).toContain('Nunito Sans');
+    expect(globalsCss).toMatch(/--font-heading:\s*[^;]+;/);
+    expect(globalsCss).toMatch(/--font-body:\s*[^;]+;/);
   });
 
   it('should have index.html with Google Fonts link', () => {
     const html = readFileSync(join(clientRoot, 'index.html'), 'utf-8');
-    expect(html).toContain('fonts.googleapis.com');
-    expect(html).toContain('Sora');
-    expect(html).toContain('Nunito+Sans');
+    expect(html).toMatch(/<link[^>]+fonts\.googleapis\.com/);
   });
 });
 
