@@ -1,25 +1,19 @@
-import { PrismaClient } from '@prisma/client';
+import Database from 'better-sqlite3';
 
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined;
-};
+let db: Database.Database | null = null;
 
-export const prisma = globalForPrisma.prisma ?? new PrismaClient();
-
-if (process.env.NODE_ENV !== 'production') {
-  globalForPrisma.prisma = prisma;
-}
-
-export async function checkDatabaseConnection(): Promise<boolean> {
-  try {
-    await prisma.$queryRaw`SELECT 1`;
-    return true;
-  } catch (error) {
-    console.error('Database connection failed:', error);
-    return false;
+export function getDb(): Database.Database {
+  if (!db) {
+    const dbPath = process.env.DATABASE_URL?.replace('file:', '') || './data/ivf_asistan.db';
+    db = new Database(dbPath);
+    db.pragma('journal_mode = WAL');
   }
+  return db;
 }
 
-export async function disconnectDatabase(): Promise<void> {
-  await prisma.$disconnect();
+export function closeDb(): void {
+  if (db) {
+    db.close();
+    db = null;
+  }
 }

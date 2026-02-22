@@ -1,10 +1,10 @@
 import { Router, Response, NextFunction } from 'express';
 import { Pool } from 'pg';
-import { authMiddleware, AuthenticatedRequest } from '../../middleware/auth';
-import * as faqService from '../../services/faq-service';
-import { generateEmbedding } from '../../services/embedding-service';
-import { SearchService } from '../../services/search-service';
-import { ValidationError, NotFoundError } from '../../utils/errors';
+import { authMiddleware, AuthenticatedRequest } from '../../middleware/auth.js';
+import * as faqService from '../../services/faq-service.js';
+import { generateEmbedding } from '../../services/embedding-service.js';
+import { SearchService } from '../../services/search-service.js';
+import { ValidationError, NotFoundError } from '../../utils/errors.js';
 
 // Helper to safely extract string from query param
 function getQueryString(req: AuthenticatedRequest, key: string): string | undefined {
