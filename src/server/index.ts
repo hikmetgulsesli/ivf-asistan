@@ -41,14 +41,19 @@ app.use('/api', createCategoriesRouter(pool));
 app.use('/api', createSuggestionsRouter(pool));
 app.use('/api', createFeedbackRouter(pool));
 
-
-// Serve client build (production)
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const clientDist = path.join(__dirname, '../../client/dist');
-app.use(express.static(clientDist));
-app.get('*', (_req, res) => {
-  res.sendFile(path.join(clientDist, 'index.html'));
-});
+// Serve client build (production only)
+if (process.env.NODE_ENV === 'production') {
+  const __dirname = path.dirname(fileURLToPath(import.meta.url));
+  const clientDist = path.join(__dirname, '../../client/dist');
+  app.use(express.static(clientDist));
+  app.get('*', (req, res, next) => {
+    // Let API routes fall through to subsequent middleware (e.g., 404/error handlers)
+    if (req.path === '/api' || req.path.startsWith('/api/')) {
+      return next();
+    }
+    res.sendFile(path.join(clientDist, 'index.html'));
+  });
+}
 
 app.use(errorHandler);
 

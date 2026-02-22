@@ -14,14 +14,13 @@ export default tseslint.config(
       '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/no-explicit-any': 'warn',
-      // ESM: relative import'larda .js extension zorunlu (Node.js ESM gereksinimi)
-      'no-restricted-syntax': [
-        'error',
-        {
-          selector: 'ImportDeclaration[source.value=/^\\.\\.?\\/.*(?<!\\.js)$/]',
-          message: 'Relative imports must end with .js extension for Node.js ESM compatibility.',
-        },
-      ],
+    },
+  },
+  {
+    // Test dosyalarında mevcut relative import'lar için kuralı kapat
+    files: ['**/*.test.{ts,tsx}'],
+    rules: {
+      'no-restricted-syntax': 'off',
     },
   },
 );

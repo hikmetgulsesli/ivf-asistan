@@ -4,11 +4,11 @@ CREATE TABLE "articles" (
     "title" VARCHAR(500) NOT NULL,
     "content" TEXT NOT NULL,
     "category" VARCHAR(100) NOT NULL,
-    "tags" TEXT[],
+    "tags" TEXT[] DEFAULT '{}',
     "embedding" JSONB,
-    "status" VARCHAR(20) DEFAULT 'draft',
-    "created_at" TIMESTAMPTZ(6) DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" TIMESTAMPTZ(6) DEFAULT CURRENT_TIMESTAMP,
+    "status" VARCHAR(20) DEFAULT 'draft' NOT NULL,
+    "created_at" TIMESTAMPTZ(6) DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    "updated_at" TIMESTAMPTZ(6) DEFAULT CURRENT_TIMESTAMP NOT NULL,
 
     CONSTRAINT "articles_pkey" PRIMARY KEY ("id")
 );
@@ -19,9 +19,9 @@ CREATE TABLE "faqs" (
     "question" VARCHAR(1000) NOT NULL,
     "answer" TEXT NOT NULL,
     "category" VARCHAR(100) NOT NULL,
-    "sort_order" INTEGER DEFAULT 0,
+    "sort_order" INTEGER DEFAULT 0 NOT NULL,
     "embedding" JSONB,
-    "created_at" TIMESTAMPTZ(6) DEFAULT CURRENT_TIMESTAMP,
+    "created_at" TIMESTAMPTZ(6) DEFAULT CURRENT_TIMESTAMP NOT NULL,
 
     CONSTRAINT "faqs_pkey" PRIMARY KEY ("id")
 );
@@ -37,8 +37,8 @@ CREATE TABLE "videos" (
     "category" VARCHAR(100) NOT NULL,
     "duration_seconds" INTEGER,
     "embedding" JSONB,
-    "analysis_status" VARCHAR(20) DEFAULT 'pending',
-    "created_at" TIMESTAMPTZ(6) DEFAULT CURRENT_TIMESTAMP,
+    "analysis_status" VARCHAR(20) DEFAULT 'pending' NOT NULL,
+    "created_at" TIMESTAMPTZ(6) DEFAULT CURRENT_TIMESTAMP NOT NULL,
 
     CONSTRAINT "videos_pkey" PRIMARY KEY ("id")
 );
@@ -51,7 +51,7 @@ CREATE TABLE "conversations" (
     "content" TEXT NOT NULL,
     "sources" JSONB,
     "sentiment" VARCHAR(20),
-    "created_at" TIMESTAMPTZ(6) DEFAULT CURRENT_TIMESTAMP,
+    "created_at" TIMESTAMPTZ(6) DEFAULT CURRENT_TIMESTAMP NOT NULL,
 
     CONSTRAINT "conversations_pkey" PRIMARY KEY ("id")
 );
@@ -63,8 +63,8 @@ CREATE TABLE "response_cache" (
     "query_text" TEXT NOT NULL,
     "response" TEXT NOT NULL,
     "sources" JSONB,
-    "hit_count" INTEGER DEFAULT 1,
-    "created_at" TIMESTAMPTZ(6) DEFAULT CURRENT_TIMESTAMP,
+    "hit_count" INTEGER DEFAULT 1 NOT NULL,
+    "created_at" TIMESTAMPTZ(6) DEFAULT CURRENT_TIMESTAMP NOT NULL,
     "expires_at" TIMESTAMPTZ(6) NOT NULL,
 
     CONSTRAINT "response_cache_pkey" PRIMARY KEY ("id")
@@ -74,13 +74,25 @@ CREATE TABLE "response_cache" (
 CREATE UNIQUE INDEX "response_cache_query_hash_key" ON "response_cache"("query_hash");
 
 -- CreateIndex
+CREATE INDEX "articles_category_idx" ON "articles"("category");
+
+-- CreateIndex
+CREATE INDEX "articles_status_idx" ON "articles"("status");
+
+-- CreateIndex
+CREATE INDEX "faqs_category_idx" ON "faqs"("category");
+
+-- CreateIndex
+CREATE INDEX "videos_category_idx" ON "videos"("category");
+
+-- CreateIndex
+CREATE INDEX "videos_analysis_status_idx" ON "videos"("analysis_status");
+
+-- CreateIndex
 CREATE INDEX "conversations_session_id_idx" ON "conversations"("session_id");
 
 -- CreateIndex
 CREATE INDEX "conversations_created_at_idx" ON "conversations"("created_at");
-
--- CreateIndex
-CREATE INDEX "response_cache_query_hash_idx" ON "response_cache"("query_hash");
 
 -- CreateIndex
 CREATE INDEX "response_cache_expires_at_idx" ON "response_cache"("expires_at");
