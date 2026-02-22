@@ -10,6 +10,7 @@ import { createChatRouter } from '../routes/chat';
 import { createCategoriesRouter } from '../routes/categories';
 import { createSuggestionsRouter } from '../routes/suggestions';
 import { createFeedbackRouter } from '../routes/feedback';
+import { createVideosRouter } from '../routes/admin/videos';
 
 dotenv.config();
 
@@ -31,6 +32,7 @@ app.get('/api/health', (_req, res) => {
 
 app.use('/api/admin', createAdminAuthRouter(pool));
 app.use('/api/admin', createAdminRouter(pool));
+app.use('/api/admin/videos', createVideosRouter(pool));
 
 app.use('/api', createChatRouter(pool));
 app.use('/api', createCategoriesRouter(pool));
