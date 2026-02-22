@@ -107,5 +107,32 @@ export function createAdminRouter(pool: Pool): express.Router {
     }
   });
 
+  router.get('/cache-stats', async (_req, res, next) => {
+    try {
+      const [statsResult, expiredResult] = await Promise.all([
+        pool.query('SELECT COUNT(*) as total, COALESCE(SUM(hit_count), 0) as total_hits FROM response_cache'),
+        pool.query('SELECT COUNT(*) as expired FROM response_cache WHERE expires_at <= NOW()'),
+      ]);
+
+      const totalEntries = parseInt(statsResult.rows[0].total);
+      const totalHits = parseInt(statsResult.rows[0].total_hits);
+      const expiredEntries = parseInt(expiredResult.rows[0].expired);
+      const activeEntries = totalEntries - expiredEntries;
+      const avgHits = totalEntries > 0 ? Math.round((totalHits / totalEntries) * 100) / 100 : 0;
+
+      res.json({
+        data: {
+          totalEntries,
+          activeEntries,
+          expiredEntries,
+          totalHits,
+          avgHits,
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+
   return router;
 }
