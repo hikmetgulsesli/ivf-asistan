@@ -6,9 +6,9 @@ const projectRoot = resolve(__dirname, '../..');
 const clientRoot = join(projectRoot, 'client');
 
 describe('US-001: Express server starts on port 4520', () => {
-  it('should have server index.ts using PORT from config', () => {
+  it('should have server index.ts using port from environment', () => {
     const serverFile = readFileSync(join(projectRoot, 'src/server/index.ts'), 'utf-8');
-    expect(serverFile).toContain('config.port');
+    expect(serverFile).toMatch(/const PORT = .*config\.port/);
   });
 
   it('should have .env.example with PORT=4520', () => {

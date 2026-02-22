@@ -51,14 +51,14 @@ describe('Protected Admin Routes', () => {
 
   it('returns 401 without valid JWT', async () => {
     const response = await request(app)
-      .get('/api/admin/stats');
+      .get('/api/admin/status');
 
     expect(response.status).toBe(401);
   });
 
   it('returns 401 with invalid JWT', async () => {
     const response = await request(app)
-      .get('/api/admin/stats')
+      .get('/api/admin/status')
       .set('Authorization', 'Bearer invalid-token');
 
     expect(response.status).toBe(401);
@@ -72,11 +72,11 @@ describe('Protected Admin Routes', () => {
     const token = loginResponse.body.data.token;
 
     const response = await request(app)
-      .get('/api/admin/stats')
+      .get('/api/admin/status')
       .set('Authorization', `Bearer ${token}`);
 
     expect(response.status).toBe(200);
-    expect(response.body.data).toHaveProperty('articles');
-    expect(response.body.data).toHaveProperty('faqs');
+    expect(response.body.data.authenticated).toBe(true);
+    expect(response.body.data.adminId).toBe('1');
   });
 });
