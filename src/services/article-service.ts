@@ -1,4 +1,4 @@
-import { getDb } from '../db/connection.js';
+import { Pool } from 'pg';
 
 export interface Article {
   id: number;
@@ -45,82 +45,77 @@ export interface PaginatedResult<T> {
   };
 }
 
-export function createArticle(input: CreateArticleInput): Article {
-  const db = getDb();
-  const tags = JSON.stringify(input.tags || []);
-  
-  const stmt = db.prepare(`
-    INSERT INTO articles (title, content, category, tags, status)
-    VALUES (?, ?, ?, ?, ?)
-  `);
-  
-  const result = stmt.run(
-    input.title,
-    input.content,
-    input.category,
-    tags,
-    input.status || 'draft'
-  );
-  
-  return getArticleById(result.lastInsertRowid as number)!;
-}
+export async function createArticle(pool: Pool, input: CreateArticleInput): Promise<Article> {
+  const tags = input.tags || [];
+  const status = input.status || 'draft';
 
-export function getArticleById(id: number): Article | null {
-  const db = getDb();
-  const stmt = db.prepare('SELECT * FROM articles WHERE id = ?');
-  const row = stmt.get(id) as Record<string, unknown> | undefined;
-  
-  if (!row) return null;
-  
+  const result = await pool.query(
+    `INSERT INTO articles (title, content, category, tags, status)
+     VALUES ($1, $2, $3, $4, $5)
+     RETURNING *`,
+    [input.title, input.content, input.category, tags, status]
+  );
+
+  const row = result.rows[0];
   return {
     ...row,
-    tags: JSON.parse(String(row.tags || '[]')),
-    embedding: row.embedding ? JSON.parse(String(row.embedding)) : null,
-  } as unknown as Article;
+    tags: row.tags || [],
+    embedding: row.embedding || null,
+  } as Article;
 }
 
-export function listArticles(params: ArticleListParams = {}): PaginatedResult<Article> {
-  const db = getDb();
+export async function getArticleById(pool: Pool, id: number): Promise<Article | null> {
+  const result = await pool.query('SELECT * FROM articles WHERE id = $1', [id]);
+
+  if (result.rows.length === 0) return null;
+
+  const row = result.rows[0];
+  return {
+    ...row,
+    tags: row.tags || [],
+    embedding: row.embedding || null,
+  } as Article;
+}
+
+export async function listArticles(pool: Pool, params: ArticleListParams = {}): Promise<PaginatedResult<Article>> {
   const page = params.page || 1;
   const limit = params.limit || 20;
   const offset = (page - 1) * limit;
-  
-  let whereClause = '';
+
+  const conditions: string[] = [];
   const queryParams: unknown[] = [];
-  
+  let paramIndex = 1;
+
   if (params.category) {
-    whereClause = 'WHERE category = ?';
+    conditions.push(`category = $${paramIndex++}`);
     queryParams.push(params.category);
   }
-  
+
   if (params.status) {
-    if (whereClause) {
-      whereClause += ' AND status = ?';
-    } else {
-      whereClause = 'WHERE status = ?';
-    }
+    conditions.push(`status = $${paramIndex++}`);
     queryParams.push(params.status);
   }
-  
-  // Get total count
-  const countStmt = db.prepare(`SELECT COUNT(*) as count FROM articles ${whereClause}`);
-  const countResult = countStmt.get(...queryParams) as { count: number };
-  const total = countResult.count;
-  
-  // Get paginated data
-  const dataStmt = db.prepare(`
-    SELECT * FROM articles ${whereClause}
-    ORDER BY created_at DESC
-    LIMIT ? OFFSET ?
-  `);
-  
-  const rows = dataStmt.all(...queryParams, limit, offset) as Record<string, unknown>[];
-  
+
+  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+  const countResult = await pool.query(
+    `SELECT COUNT(*) as count FROM articles ${whereClause}`,
+    queryParams
+  );
+  const total = parseInt(countResult.rows[0].count, 10);
+
+  const dataResult = await pool.query(
+    `SELECT * FROM articles ${whereClause}
+     ORDER BY created_at DESC
+     LIMIT $${paramIndex++} OFFSET $${paramIndex++}`,
+    [...queryParams, limit, offset]
+  );
+
   return {
-    data: rows.map(row => ({
+    data: dataResult.rows.map((row: Record<string, unknown>) => ({
       ...row,
-      tags: JSON.parse(String(row.tags || '[]')),
-      embedding: row.embedding ? JSON.parse(String(row.embedding)) : null,
+      tags: (row.tags as string[]) || [],
+      embedding: row.embedding || null,
     })) as unknown as Article[],
     meta: {
       page,
@@ -131,59 +126,54 @@ export function listArticles(params: ArticleListParams = {}): PaginatedResult<Ar
   };
 }
 
-export function updateArticle(id: number, input: UpdateArticleInput): Article | null {
-  const db = getDb();
-  const existing = getArticleById(id);
+export async function updateArticle(pool: Pool, id: number, input: UpdateArticleInput): Promise<Article | null> {
+  const existing = await getArticleById(pool, id);
   if (!existing) return null;
-  
+
   const updates: string[] = [];
   const params: unknown[] = [];
-  
+  let paramIndex = 1;
+
   if (input.title !== undefined) {
-    updates.push('title = ?');
+    updates.push(`title = $${paramIndex++}`);
     params.push(input.title);
   }
   if (input.content !== undefined) {
-    updates.push('content = ?');
+    updates.push(`content = $${paramIndex++}`);
     params.push(input.content);
   }
   if (input.category !== undefined) {
-    updates.push('category = ?');
+    updates.push(`category = $${paramIndex++}`);
     params.push(input.category);
   }
   if (input.tags !== undefined) {
-    updates.push('tags = ?');
-    params.push(JSON.stringify(input.tags));
+    updates.push(`tags = $${paramIndex++}`);
+    params.push(input.tags);
   }
   if (input.status !== undefined) {
-    updates.push('status = ?');
+    updates.push(`status = $${paramIndex++}`);
     params.push(input.status);
   }
-  
+
   if (updates.length === 0) return existing;
-  
-  updates.push("updated_at = datetime('now')");
+
+  updates.push(`updated_at = NOW()`);
   params.push(id);
-  
-  const stmt = db.prepare(`
-    UPDATE articles SET ${updates.join(', ')} WHERE id = ?
-  `);
-  
-  stmt.run(...params);
-  
-  return getArticleById(id);
+
+  await pool.query(
+    `UPDATE articles SET ${updates.join(', ')} WHERE id = $${paramIndex}`,
+    params
+  );
+
+  return getArticleById(pool, id);
 }
 
-export function deleteArticle(id: number): boolean {
-  const db = getDb();
-  const stmt = db.prepare('DELETE FROM articles WHERE id = ?');
-  const result = stmt.run(id);
-  return result.changes > 0;
+export async function deleteArticle(pool: Pool, id: number): Promise<boolean> {
+  const result = await pool.query('DELETE FROM articles WHERE id = $1', [id]);
+  return (result.rowCount ?? 0) > 0;
 }
 
-export function getCategories(): string[] {
-  const db = getDb();
-  const stmt = db.prepare('SELECT DISTINCT category FROM articles ORDER BY category');
-  const rows = stmt.all() as { category: string }[];
-  return rows.map(row => row.category);
+export async function getCategories(pool: Pool): Promise<string[]> {
+  const result = await pool.query('SELECT DISTINCT category FROM articles ORDER BY category');
+  return result.rows.map((row: { category: string }) => row.category);
 }

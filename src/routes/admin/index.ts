@@ -11,6 +11,14 @@ export function createAdminRouter(pool: Pool): express.Router {
   const searchService = new SearchService(pool);
 
   router.use(authMiddleware);
+  // In-memory settings store with defaults
+  const defaultSettings: Record<string, string> = {
+    systemPrompt: "Sen IVF (Tup Bebek) klinikleri icin gelistirilmis bir hasta asistanisin.",
+    theme: "light",
+    primaryColor: "#059669",
+  };
+
+
 
   // GET /api/admin/status - Check authentication status
   router.get('/status', (req: AuthenticatedRequest, res) => {
@@ -216,6 +224,61 @@ export function createAdminRouter(pool: Pool): express.Router {
     } catch (error) {
       next(error);
     }
+  });
+
+
+  // Dashboard routes (frontend compatibility)
+  router.get('/dashboard', async (_req, res, next) => {
+    try {
+      const [articleCount, faqCount, videoCount, conversationCount, cacheStats] = await Promise.all([
+        pool.query("SELECT COUNT(*) as count FROM articles WHERE status = $1", ['published']),
+        pool.query("SELECT COUNT(*) as count FROM faqs"),
+        pool.query("SELECT COUNT(*) as count FROM videos WHERE analysis_status = $1", ['done']),
+        pool.query("SELECT COUNT(DISTINCT session_id) as count FROM conversations"),
+        pool.query("SELECT COUNT(*) as total, COALESCE(SUM(hit_count), 0) as total_hits FROM response_cache"),
+      ]);
+      const totalEntries = parseInt(cacheStats.rows[0].total);
+      const totalHits = parseInt(cacheStats.rows[0].total_hits);
+      res.json({ data: { articles: parseInt(articleCount.rows[0].count), faqs: parseInt(faqCount.rows[0].count), videos: parseInt(videoCount.rows[0].count), sessions: parseInt(conversationCount.rows[0].count), cache: { totalEntries, totalHits, avgHits: totalEntries > 0 ? Math.round((totalHits / totalEntries) * 100) / 100 : 0 } } });
+    } catch (error) { next(error); }
+  });
+
+  router.get('/dashboard/top-questions', async (req, res, next) => {
+    try {
+      const limit = parseInt(req.query.limit as string || '10', 10);
+      res.json({ data: [] });
+    } catch (error) { next(error); }
+  });
+
+  router.get('/dashboard/sentiment', async (_req, res, next) => {
+    try {
+      res.json({ data: { positive: 0, neutral: 0, negative: 0 } });
+    } catch (error) { next(error); }
+  });
+
+  router.get('/dashboard/conversations', async (req, res, next) => {
+    try {
+      const { limit = 50, offset = 0 } = req.query;
+      const result = await pool.query(
+        "SELECT DISTINCT session_id, MAX(created_at) as last_activity FROM conversations GROUP BY session_id ORDER BY last_activity DESC LIMIT $1 OFFSET $2",
+        [parseInt(limit as string, 10), parseInt(offset as string, 10)]
+      );
+      res.json({ data: result.rows, meta: { limit: parseInt(limit as string, 10), offset: parseInt(offset as string, 10), count: result.rows.length } });
+    } catch (error) { next(error); }
+  });
+
+
+  // Settings endpoints (in-memory store)
+  router.get("/settings", (_req, res) => {
+    res.json({ data: { ...defaultSettings } });
+  });
+
+  router.put("/settings", (req, res) => {
+    const { settings } = req.body;
+    if (settings && typeof settings === "object") {
+      Object.assign(defaultSettings, settings as Record<string, string>);
+    }
+    res.json({ data: { ...defaultSettings } });
   });
 
   // Mount video routes

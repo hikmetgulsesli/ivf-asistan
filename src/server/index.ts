@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { Pool } from 'pg';
 import { config } from '../config/index.js';
 import { errorHandler } from '../middleware/error-handler.js';
@@ -36,6 +38,17 @@ app.use('/api', createChatRouter(pool));
 app.use('/api', createCategoriesRouter(pool));
 app.use('/api', createSuggestionsRouter(pool));
 app.use('/api', createFeedbackRouter(pool));
+
+// Serve frontend static files
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const clientDist = path.join(__dirname, '../../client/dist');
+app.use(express.static(clientDist));
+
+// SPA fallback - serve index.html for non-API routes
+app.get('*', (_req, res) => {
+  res.sendFile(path.join(clientDist, 'index.html'));
+});
 
 app.use(errorHandler);
 

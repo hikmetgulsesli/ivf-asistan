@@ -1,4 +1,4 @@
-import { getDb } from '../db/connection.js';
+import { Pool } from 'pg';
 
 export interface FAQ {
   id: number;
@@ -40,69 +40,68 @@ export interface PaginatedResult<T> {
   };
 }
 
-export function createFaq(input: CreateFaqInput): FAQ {
-  const db = getDb();
-  
-  const stmt = db.prepare(`
-    INSERT INTO faqs (question, answer, category, sort_order)
-    VALUES (?, ?, ?, ?)
-  `);
-  
-  const result = stmt.run(
-    input.question,
-    input.answer,
-    input.category,
-    input.sort_order || 0
-  );
-  
-  return getFaqById(result.lastInsertRowid as number)!;
-}
+export async function createFaq(pool: Pool, input: CreateFaqInput): Promise<FAQ> {
+  const sort_order = input.sort_order || 0;
 
-export function getFaqById(id: number): FAQ | null {
-  const db = getDb();
-  const stmt = db.prepare('SELECT * FROM faqs WHERE id = ?');
-  const row = stmt.get(id) as Record<string, unknown> | undefined;
-  
-  if (!row) return null;
-  
+  const result = await pool.query(
+    `INSERT INTO faqs (question, answer, category, sort_order)
+     VALUES ($1, $2, $3, $4)
+     RETURNING *`,
+    [input.question, input.answer, input.category, sort_order]
+  );
+
+  const row = result.rows[0];
   return {
     ...row,
-    embedding: row.embedding ? JSON.parse(String(row.embedding)) : null,
-  } as unknown as FAQ;
+    embedding: row.embedding || null,
+  } as FAQ;
 }
 
-export function listFaqs(params: FaqListParams = {}): PaginatedResult<FAQ> {
-  const db = getDb();
+export async function getFaqById(pool: Pool, id: number): Promise<FAQ | null> {
+  const result = await pool.query('SELECT * FROM faqs WHERE id = $1', [id]);
+
+  if (result.rows.length === 0) return null;
+
+  const row = result.rows[0];
+  return {
+    ...row,
+    embedding: row.embedding || null,
+  } as FAQ;
+}
+
+export async function listFaqs(pool: Pool, params: FaqListParams = {}): Promise<PaginatedResult<FAQ>> {
   const page = params.page || 1;
   const limit = params.limit || 20;
   const offset = (page - 1) * limit;
-  
-  let whereClause = '';
+
+  const conditions: string[] = [];
   const queryParams: unknown[] = [];
-  
+  let paramIndex = 1;
+
   if (params.category) {
-    whereClause = 'WHERE category = ?';
+    conditions.push(`category = $${paramIndex++}`);
     queryParams.push(params.category);
   }
-  
-  // Get total count
-  const countStmt = db.prepare(`SELECT COUNT(*) as count FROM faqs ${whereClause}`);
-  const countResult = countStmt.get(...queryParams) as { count: number };
-  const total = countResult.count;
-  
-  // Get paginated data
-  const dataStmt = db.prepare(`
-    SELECT * FROM faqs ${whereClause}
-    ORDER BY sort_order ASC, created_at DESC
-    LIMIT ? OFFSET ?
-  `);
-  
-  const rows = dataStmt.all(...queryParams, limit, offset) as Record<string, unknown>[];
-  
+
+  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+  const countResult = await pool.query(
+    `SELECT COUNT(*) as count FROM faqs ${whereClause}`,
+    queryParams
+  );
+  const total = parseInt(countResult.rows[0].count, 10);
+
+  const dataResult = await pool.query(
+    `SELECT * FROM faqs ${whereClause}
+     ORDER BY sort_order ASC, created_at DESC
+     LIMIT $${paramIndex++} OFFSET $${paramIndex++}`,
+    [...queryParams, limit, offset]
+  );
+
   return {
-    data: rows.map(row => ({
+    data: dataResult.rows.map((row: Record<string, unknown>) => ({
       ...row,
-      embedding: row.embedding ? JSON.parse(String(row.embedding)) : null,
+      embedding: row.embedding || null,
     })) as unknown as FAQ[],
     meta: {
       page,
@@ -113,47 +112,44 @@ export function listFaqs(params: FaqListParams = {}): PaginatedResult<FAQ> {
   };
 }
 
-export function updateFaq(id: number, input: UpdateFaqInput): FAQ | null {
-  const db = getDb();
-  const existing = getFaqById(id);
+export async function updateFaq(pool: Pool, id: number, input: UpdateFaqInput): Promise<FAQ | null> {
+  const existing = await getFaqById(pool, id);
   if (!existing) return null;
-  
+
   const updates: string[] = [];
   const params: unknown[] = [];
-  
+  let paramIndex = 1;
+
   if (input.question !== undefined) {
-    updates.push('question = ?');
+    updates.push(`question = $${paramIndex++}`);
     params.push(input.question);
   }
   if (input.answer !== undefined) {
-    updates.push('answer = ?');
+    updates.push(`answer = $${paramIndex++}`);
     params.push(input.answer);
   }
   if (input.category !== undefined) {
-    updates.push('category = ?');
+    updates.push(`category = $${paramIndex++}`);
     params.push(input.category);
   }
   if (input.sort_order !== undefined) {
-    updates.push('sort_order = ?');
+    updates.push(`sort_order = $${paramIndex++}`);
     params.push(input.sort_order);
   }
-  
+
   if (updates.length === 0) return existing;
-  
+
   params.push(id);
-  
-  const stmt = db.prepare(`
-    UPDATE faqs SET ${updates.join(', ')} WHERE id = ?
-  `);
-  
-  stmt.run(...params);
-  
-  return getFaqById(id);
+
+  await pool.query(
+    `UPDATE faqs SET ${updates.join(', ')} WHERE id = $${paramIndex}`,
+    params
+  );
+
+  return getFaqById(pool, id);
 }
 
-export function deleteFaq(id: number): boolean {
-  const db = getDb();
-  const stmt = db.prepare('DELETE FROM faqs WHERE id = ?');
-  const result = stmt.run(id);
-  return result.changes > 0;
+export async function deleteFaq(pool: Pool, id: number): Promise<boolean> {
+  const result = await pool.query('DELETE FROM faqs WHERE id = $1', [id]);
+  return (result.rowCount ?? 0) > 0;
 }
