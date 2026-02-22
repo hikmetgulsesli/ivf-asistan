@@ -18,11 +18,11 @@ export function createAdminAuthRouter(_pool: Pool): express.Router {
       const { username, password } = req.body;
 
       if (!username || typeof username !== 'string') {
-        throw new ValidationError('username', 'Username is required');
+        throw new ValidationError('Username is required', [{ field: 'username', message: 'Username is required' }]);
       }
 
       if (!password || typeof password !== 'string') {
-        throw new ValidationError('password', 'Password is required');
+        throw new ValidationError('Password is required', [{ field: 'password', message: 'Password is required' }]);
       }
 
       const admin = admins.get(username);
