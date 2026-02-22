@@ -18,11 +18,11 @@ export function createAdminAuthRouter(_pool: Pool): express.Router {
       const { username, password } = req.body;
 
       if (!username || typeof username !== 'string') {
-        throw new ValidationError('username', 'Username is required');
+        throw new ValidationError('Username is required', [{ field: 'username', message: 'Username is required' }]);
       }
 
       if (!password || typeof password !== 'string') {
-        throw new ValidationError('password', 'Password is required');
+        throw new ValidationError('Password is required', [{ field: 'password', message: 'Password is required' }]);
       }
 
       const admin = admins.get(username);
@@ -37,12 +37,12 @@ export function createAdminAuthRouter(_pool: Pool): express.Router {
         throw new UnauthorizedError('Invalid username or password');
       }
 
-      const token = jwt.sign({ id: admin.id }, config.jwtSecret, { expiresIn: '24h' });
+      const token = jwt.sign({ adminId: admin.id, username: admin.username }, config.jwtSecret, { expiresIn: '24h' });
 
       res.json({
         data: {
           token,
-          user: {
+          admin: {
             id: admin.id,
             username: admin.username,
           },
