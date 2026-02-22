@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { AppError } from '../utils/errors';
+import { AppError, ValidationError } from '../utils/errors';
 
 export function errorHandler(
   err: Error,
@@ -7,7 +7,29 @@ export function errorHandler(
   res: Response,
   _next: NextFunction
 ): void {
-  console.error('Error:', err);
+  // Sanitize error logging in production
+  if (process.env.NODE_ENV !== 'production') {
+    console.error('Error:', err);
+  } else {
+    console.error('Error:', {
+      name: err.name,
+      message: err.message,
+      code: (err as AppError).code,
+      statusCode: (err as AppError).statusCode,
+    });
+  }
+
+  // Handle ValidationError first to include details
+  if (err instanceof ValidationError) {
+    res.status(err.statusCode).json({
+      error: {
+        code: err.code,
+        message: err.message,
+        details: err.details,
+      },
+    });
+    return;
+  }
 
   if (err instanceof AppError) {
     res.status(err.statusCode).json({

@@ -1,6 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { login } from '../../services/auth-service';
-import { AppError } from '../../utils/errors';
+import { AppError, UnauthorizedError } from '../../utils/errors';
 
 const router = Router();
 
@@ -18,7 +18,7 @@ router.post('/login', async (req: Request, res: Response, next: NextFunction) =>
       data: result,
     });
   } catch (error) {
-    if (error instanceof Error && error.message === 'Invalid credentials') {
+    if (error instanceof UnauthorizedError) {
       next(new AppError('AUTH_ERROR', 'Invalid username or password', 401));
     } else {
       next(error);

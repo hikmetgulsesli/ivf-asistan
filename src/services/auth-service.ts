@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { config } from '../config';
+import { UnauthorizedError } from '../utils/errors';
 
 export interface AdminUser {
   id: number;
@@ -10,13 +11,20 @@ export interface AdminUser {
 }
 
 const adminUsers: Map<string, AdminUser> = new Map();
+let isInitialized = false;
 
+// Default admin credentials - should be overridden via environment variables in production
 const DEFAULT_ADMIN = {
-  username: 'admin',
-  password: 'ivf2024',
+  username: process.env.DEFAULT_ADMIN_USERNAME || 'admin',
+  password: process.env.DEFAULT_ADMIN_PASSWORD || 'ivf2024',
 };
 
 export async function initializeAdmin(): Promise<void> {
+  // Prevent race condition: only initialize once
+  if (isInitialized) {
+    return;
+  }
+  
   const passwordHash = await bcrypt.hash(DEFAULT_ADMIN.password, 10);
   const admin: AdminUser = {
     id: 1,
@@ -25,6 +33,7 @@ export async function initializeAdmin(): Promise<void> {
     createdAt: new Date(),
   };
   adminUsers.set(admin.username, admin);
+  isInitialized = true;
 }
 
 export interface LoginCredentials {
@@ -45,12 +54,12 @@ export async function login(credentials: LoginCredentials): Promise<LoginRespons
 
   const admin = adminUsers.get(username);
   if (!admin) {
-    throw new Error('Invalid credentials');
+    throw new UnauthorizedError('Invalid credentials');
   }
 
   const isValidPassword = await bcrypt.compare(password, admin.passwordHash);
   if (!isValidPassword) {
-    throw new Error('Invalid credentials');
+    throw new UnauthorizedError('Invalid credentials');
   }
 
   const jwtSecret = config.jwtSecret;
@@ -82,6 +91,6 @@ export function verifyToken(token: string): JwtPayload {
     const decoded = jwt.verify(token, jwtSecret) as JwtPayload;
     return decoded;
   } catch {
-    throw new Error('Invalid token');
+    throw new UnauthorizedError('Invalid or expired token');
   }
 }

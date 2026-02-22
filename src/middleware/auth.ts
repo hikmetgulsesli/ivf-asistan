@@ -13,17 +13,17 @@ export function authMiddleware(
 ): void {
   const authHeader = req.headers.authorization;
 
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  if (!authHeader || !/^Bearer\s+/i.test(authHeader)) {
     return next(new UnauthorizedError('Missing or invalid authorization header'));
   }
 
-  const token = authHeader.substring(7);
+  const token = authHeader.replace(/^Bearer\s+/i, '');
 
   try {
     const payload = verifyToken(token);
     req.admin = payload;
     next();
   } catch {
-    next(new UnauthorizedError('Invalid or expired token'));
+    return next(new UnauthorizedError('Invalid or expired token'));
   }
 }

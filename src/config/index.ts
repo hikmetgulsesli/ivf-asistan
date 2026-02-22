@@ -5,7 +5,9 @@ dotenv.config();
 export const config = {
   port: parseInt(process.env.PORT || '3001', 10),
   databaseUrl: process.env.DATABASE_URL || '',
-  jwtSecret: process.env.JWT_SECRET || 'dev-secret-key-not-for-production',
+  jwtSecret: process.env.JWT_SECRET || (process.env.NODE_ENV === 'production' 
+    ? requireEnv('JWT_SECRET') 
+    : 'dev-secret-key-not-for-production'),
   minimaxApiKey: process.env.MINIMAX_API_KEY || '',
   minimaxApiHost: process.env.MINIMAX_API_HOST || 'https://api.minimax.io',
   kimiApiKey: process.env.KIMI_API_KEY || '',

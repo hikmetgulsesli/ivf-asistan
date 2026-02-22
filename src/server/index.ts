@@ -1,13 +1,10 @@
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import { config } from '../config';
 import { initializeAdmin } from '../services/auth-service';
 import adminAuthRoutes from '../routes/admin/auth';
 import adminRoutes from '../routes/admin/index';
 import { errorHandler } from '../middleware/error-handler';
-
-dotenv.config();
 
 const app = express();
 const PORT = config.port;
@@ -18,7 +15,12 @@ app.use(cors({
 app.use(express.json());
 
 app.get('/api/health', (_req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({ 
+    data: { 
+      status: 'ok', 
+      timestamp: new Date().toISOString() 
+    } 
+  });
 });
 
 app.use('/api/admin/auth', adminAuthRoutes);
@@ -39,6 +41,9 @@ async function start() {
   }
 }
 
-start();
+// Only start server if not in test environment and if run directly
+if (process.env.NODE_ENV !== 'test' && import.meta.url === `file://${process.argv[1]}`) {
+  start();
+}
 
 export default app;
