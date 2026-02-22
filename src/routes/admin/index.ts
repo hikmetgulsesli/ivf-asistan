@@ -1,13 +1,27 @@
 import express from 'express';
 import { Pool } from 'pg';
-import { authMiddleware } from '../../middleware/auth';
-import { createVideoRouter } from './videos';
-import { reindexAllContent } from '../../services/search-service';
-
-const router = express.Router();
+import { authMiddleware, AuthenticatedRequest } from '../../middleware/auth';
+import { createVideosRouter } from './videos';
+import { createArticlesRouter } from './articles';
+import { createFaqsRouter } from './faqs';
+import { SearchService } from '../../services/search-service';
 
 export function createAdminRouter(pool: Pool): express.Router {
+  const router = express.Router();
+  const searchService = new SearchService(pool);
+
   router.use(authMiddleware);
+
+  // GET /api/admin/status - Check authentication status
+  router.get('/status', (req: AuthenticatedRequest, res) => {
+    res.json({
+      data: {
+        authenticated: true,
+        adminId: String(req.admin?.adminId),
+        username: req.admin?.username,
+      },
+    });
+  });
 
   router.get('/stats', async (_req, res, next) => {
     try {
@@ -81,7 +95,7 @@ export function createAdminRouter(pool: Pool): express.Router {
   // POST /api/admin/reindex - Reindex all content (regenerate all embeddings)
   router.post('/reindex', async (_req, res, next) => {
     try {
-      const result = await reindexAllContent();
+      const result = await searchService.reindexAllContent();
       
       res.json({
         data: result,
@@ -95,7 +109,7 @@ export function createAdminRouter(pool: Pool): express.Router {
   // GET /api/admin/reindex - Also supports GET for compatibility
   router.get('/reindex', async (_req, res, next) => {
     try {
-      const result = await reindexAllContent();
+      const result = await searchService.reindexAllContent();
       
       res.json({
         data: result,
@@ -155,10 +169,63 @@ export function createAdminRouter(pool: Pool): express.Router {
     }
   });
 
+  // GET /api/admin/stats/sentiment - Get sentiment analysis stats
+  router.get('/stats/sentiment', async (_req, res, next) => {
+    try {
+      // Placeholder for sentiment stats
+      res.json({
+        data: {
+          positive: 0,
+          neutral: 0,
+          negative: 0,
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // GET /api/admin/stats/queries - Get query stats
+  router.get('/stats/queries', async (req, res, next) => {
+    try {
+      const limit = parseInt(req.query.limit as string || '10', 10);
+      if (limit < 1 || limit > 100) {
+        return res.status(400).json({
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Limit must be between 1 and 100',
+          },
+        });
+      }
+      // Placeholder for query stats
+      res.json({
+        data: [],
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // GET /api/admin/stats/daily - Get daily stats
+  router.get('/stats/daily', async (_req, res, next) => {
+    try {
+      // Placeholder for daily stats
+      res.json({
+        data: [],
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+
   // Mount video routes
-  router.use(createVideoRouter(pool));
+  router.use('/videos', createVideosRouter(pool));
+  
+  // Mount articles routes
+  router.use('/articles', createArticlesRouter(pool));
+  
+  // Mount faqs routes
+  router.use('/faqs', createFaqsRouter(pool));
 
   return router;
 }
-
-export default router;

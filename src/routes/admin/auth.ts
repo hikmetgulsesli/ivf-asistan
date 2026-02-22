@@ -37,12 +37,12 @@ export function createAdminAuthRouter(_pool: Pool): express.Router {
         throw new UnauthorizedError('Invalid username or password');
       }
 
-      const token = jwt.sign({ id: admin.id, username: admin.username }, config.jwtSecret, { expiresIn: '24h' });
+      const token = jwt.sign({ adminId: parseInt(admin.id, 10), username: admin.username }, config.jwtSecret, { expiresIn: '24h' });
 
       res.json({
         data: {
           token,
-          user: {
+          admin: {
             id: admin.id,
             username: admin.username,
           },
