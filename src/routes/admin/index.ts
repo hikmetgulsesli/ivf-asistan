@@ -32,7 +32,7 @@ export function createAdminRouter(pool: Pool): express.Router {
       const daysNum = parseInt(days as string, 10);
 
       if (isNaN(daysNum) || daysNum < 1 || daysNum > 365) {
-        throw new ValidationError('Days must be between 1 and 365', [{ field: 'days', message: 'Days must be between 1 and 365' }]);
+        throw new ValidationError([{ field: 'days', message: 'Days must be between 1 and 365' }]);
       }
 
       const [contentStats, statsSummary] = await Promise.all([
@@ -91,11 +91,11 @@ export function createAdminRouter(pool: Pool): express.Router {
       const limitNum = parseInt(limit as string, 10);
 
       if (isNaN(pageNum) || pageNum < 1) {
-        throw new ValidationError('Page must be a positive number', [{ field: 'page', message: 'Page must be a positive number' }]);
+        throw new ValidationError([{ field: 'page', message: 'Page must be a positive number' }]);
       }
 
       if (isNaN(limitNum) || limitNum < 1 || limitNum > 100) {
-        throw new ValidationError('Limit must be between 1 and 100', [{ field: 'limit', message: 'Limit must be between 1 and 100' }]);
+        throw new ValidationError([{ field: 'limit', message: 'Limit must be between 1 and 100' }]);
       }
 
       const result = await statsService.getRecentConversations(pageNum, limitNum);
@@ -135,7 +135,7 @@ export function createAdminRouter(pool: Pool): express.Router {
       const limitNum = parseInt(limit as string, 10);
 
       if (isNaN(limitNum) || limitNum < 1 || limitNum > 50) {
-        throw new ValidationError('Limit must be between 1 and 50', [{ field: 'limit', message: 'Limit must be between 1 and 50' }]);
+        throw new ValidationError([{ field: 'limit', message: 'Limit must be between 1 and 50' }]);
       }
 
       const topQueries = await statsService.getTopQueries(limitNum);
@@ -158,7 +158,7 @@ export function createAdminRouter(pool: Pool): express.Router {
       const daysNum = parseInt(days as string, 10);
 
       if (isNaN(daysNum) || daysNum < 1 || daysNum > 365) {
-        throw new ValidationError('Days must be between 1 and 365', [{ field: 'days', message: 'Days must be between 1 and 365' }]);
+        throw new ValidationError([{ field: 'days', message: 'Days must be between 1 and 365' }]);
       }
 
       const dailyStats = await statsService.getDailyStats(daysNum);
@@ -178,6 +178,31 @@ export function createAdminRouter(pool: Pool): express.Router {
         message: 'Reindexing job queued. This feature is not yet implemented.',
       },
     });
+  });
+
+  router.get('/cache-stats', async (_req, res, next) => {
+    try {
+      const result = await pool.query(`
+        SELECT 
+          COUNT(*) as total,
+          COUNT(*) FILTER (WHERE expires_at < NOW()) as expired,
+          COALESCE(SUM(hit_count), 0) as total_hits
+        FROM response_cache
+      `);
+
+      const row = result.rows[0];
+
+      res.json({
+        data: {
+          total: parseInt(row.total, 10),
+          expired: parseInt(row.expired, 10),
+          active: parseInt(row.total, 10) - parseInt(row.expired, 10),
+          totalHits: parseInt(row.total_hits, 10),
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
   });
 
   router.delete('/cache', async (req, res, next) => {
