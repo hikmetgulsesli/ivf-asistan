@@ -1,0 +1,20 @@
+=== US-011: Admin Panel - Dashboard and Content Management ===
+COMPLETED: 2026-02-22T06:10:00+03:00
+FILES CHANGED: 
+- client/src/App.tsx (React Router setup)
+- client/src/globals.css (design tokens - Plus Jakarta/Work Sans, Blue palette)
+- client/src/components/Sidebar.tsx
+- client/src/pages/DashboardPage.tsx (charts with Recharts)
+- client/src/pages/ArticlesPage.tsx (CRUD + filters)
+- client/src/pages/FaqsPage.tsx (drag-to-reorder with @dnd-kit)
+- client/src/pages/VideosPage.tsx (analysis status view)
+- client/src/pages/CachePage.tsx
+- client/src/pages/SettingsPage.tsx
+- client/src/pages/LoginPage.tsx
+- client/src/services/api.ts
+- client/src/types.ts
+- src/routes/admin/content.ts (articles/faqs/videos API)
+- src/routes/admin/analytics.ts (dashboard stats API)
+- src/server/index.ts (register new routers)
+KEY DECISIONS: Used Recharts for charts, @dnd-kit for drag reorder, Plus Jakarta Sans/Work Sans per design standards
+DEPENDENCIES ADDED: react-router-dom, lucide-react, recharts, @dnd-kit/core, @dnd-kit/sortable, @dnd-kit/utilities

@@ -10,13 +10,6 @@ export function initSearchService(p: Pool) {
   pool = p;
 }
 
-function getPool(): Pool {
-  if (!pool) {
-    throw new Error('Database pool not initialized');
-  }
-  return pool;
-}
-
 export interface SearchResultItem {
   type: 'article' | 'faq' | 'video';
   id: number;

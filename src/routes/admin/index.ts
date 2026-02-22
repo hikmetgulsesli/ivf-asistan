@@ -1,12 +1,23 @@
 import express from 'express';
 import { Pool } from 'pg';
-import { authMiddleware } from '../../middleware/auth';
+import { authMiddleware, AuthenticatedRequest } from '../../middleware/auth';
 import { createVideosRouter } from './videos';
 
 const router = express.Router();
 
 export function createAdminRouter(pool: Pool): express.Router {
   router.use(authMiddleware);
+
+  // Status endpoint for auth verification
+  router.get('/status', (req: AuthenticatedRequest, res) => {
+    res.json({
+      data: {
+        authenticated: true,
+        adminId: req.admin?.adminId,
+        username: req.admin?.username,
+      },
+    });
+  });
 
   router.get('/stats', async (_req, res, next) => {
     try {
