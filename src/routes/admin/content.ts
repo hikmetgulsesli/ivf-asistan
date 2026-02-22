@@ -1,10 +1,13 @@
 import express from 'express';
 import { Pool } from 'pg';
 import { authMiddleware } from '../../middleware/auth';
+import { queueVideoAnalysis, initVideoAnalysisService } from '../../services/video-analysis-service';
 
 const router = express.Router();
 
 export function createContentRouter(pool: Pool): express.Router {
+  // Initialize video analysis service with pool
+  initVideoAnalysisService(pool);
   router.use(authMiddleware);
 
   // ARTICLES
@@ -377,7 +380,12 @@ export function createContentRouter(pool: Pool): express.Router {
         [title, url, category || 'general', 'pending']
       );
 
-      res.status(201).json({ data: result.rows[0] });
+      const video = result.rows[0];
+      
+      // Trigger async video analysis
+      queueVideoAnalysis(video.id);
+
+      res.status(201).json({ data: video });
     } catch (error) {
       next(error);
     }
