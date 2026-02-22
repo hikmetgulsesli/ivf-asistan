@@ -3,6 +3,8 @@
     "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "bundler",
+    "allowImportingTsExtensions": false,
+    "noEmit": false,
     "lib": ["ES2022"],
     "outDir": "./dist",
     "rootDir": "./src",

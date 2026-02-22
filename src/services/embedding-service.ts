@@ -1,4 +1,5 @@
 import OpenAI from 'openai';
+import { config } from '../config/index.js';
 
 export interface SearchResult {
   id: number;
@@ -152,4 +153,42 @@ export class EmbeddingService {
     results.sort((a, b) => b.score - a.score);
     return results.slice(0, limit);
   }
+}
+
+// Standalone function for embedding generation
+export async function generateEmbedding(text: string): Promise<{ embedding: number[]; usage: { prompt_tokens: number; total_tokens: number } }> {
+  if (!config.minimaxApiKey) {
+    throw new Error('MINIMAX_API_KEY not configured');
+  }
+
+  const response = await fetch(`${config.minimaxApiHost}/v1/text/embeddings`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${config.minimaxApiKey}`,
+    },
+    body: JSON.stringify({
+      model: 'abab6.5s-chat',
+      input: text,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`MiniMax embedding API error: ${response.status} - ${error}`);
+  }
+
+  const data = await response.json() as {
+    data: Array<{ embedding: number[] }>;
+    usage?: { prompt_tokens: number; total_tokens: number };
+  };
+  
+  if (!data.data || !data.data[0] || !data.data[0].embedding) {
+    throw new Error('Invalid embedding response from MiniMax API');
+  }
+
+  return {
+    embedding: data.data[0].embedding,
+    usage: data.usage || { prompt_tokens: 0, total_tokens: 0 },
+  };
 }

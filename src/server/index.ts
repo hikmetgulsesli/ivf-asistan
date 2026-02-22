@@ -6,17 +6,16 @@ import { config } from '../config/index';
 import { errorHandler } from '../middleware/error-handler';
 import { createAdminAuthRouter } from '../routes/admin/auth';
 import { createAdminRouter } from '../routes/admin/index';
-import { createContentRouter } from '../routes/admin/content';
-import { createAnalyticsRouter } from '../routes/admin/analytics';
 import { createChatRouter } from '../routes/chat';
 import { createCategoriesRouter } from '../routes/categories';
 import { createSuggestionsRouter } from '../routes/suggestions';
 import { createFeedbackRouter } from '../routes/feedback';
+import { createVideosRouter } from '../routes/admin/videos';
 
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || config.port;
+const PORT = config.port;
 
 const pool = new Pool({
   connectionString: config.databaseUrl,
@@ -33,8 +32,7 @@ app.get('/api/health', (_req, res) => {
 
 app.use('/api/admin', createAdminAuthRouter(pool));
 app.use('/api/admin', createAdminRouter(pool));
-app.use('/api/admin', createContentRouter(pool));
-app.use('/api/admin', createAnalyticsRouter(pool));
+app.use('/api/admin/videos', createVideosRouter(pool));
 
 app.use('/api', createChatRouter(pool));
 app.use('/api', createCategoriesRouter(pool));

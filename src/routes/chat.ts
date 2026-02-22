@@ -43,15 +43,15 @@ export function createChatRouter(pool: Pool): express.Router {
       const { message, session_id, stage } = req.body;
 
       if (!message || typeof message !== 'string' || message.trim().length === 0) {
-        throw new ValidationError('Message is required and must be a non-empty string', [{ field: 'message', message: 'Message is required and must be a non-empty string' }]);
+        throw new ValidationError('message', 'Message is required and must be a non-empty string');
       }
 
       if (!session_id || typeof session_id !== 'string' || session_id.trim().length === 0) {
-        throw new ValidationError('session_id is required and must be a non-empty string', [{ field: 'session_id', message: 'session_id is required and must be a non-empty string' }]);
+        throw new ValidationError('session_id', 'session_id is required and must be a non-empty string');
       }
 
       if (message.length > 2000) {
-        throw new ValidationError('Message must be less than 2000 characters', [{ field: 'message', message: 'Message must be less than 2000 characters' }]);
+        throw new ValidationError('message', 'Message must be less than 2000 characters');
       }
 
       if (!checkRateLimit(session_id)) {
@@ -84,13 +84,13 @@ export function createChatRouter(pool: Pool): express.Router {
       const { session_id, limit } = req.query;
 
       if (!session_id || typeof session_id !== 'string') {
-        throw new ValidationError('session_id is required', [{ field: 'session_id', message: 'session_id is required' }]);
+        throw new ValidationError('session_id', 'session_id is required');
       }
 
       const limitNum = limit ? parseInt(limit as string, 10) : 20;
 
       if (limitNum < 1 || limitNum > 100) {
-        throw new ValidationError('Limit must be between 1 and 100', [{ field: 'limit', message: 'Limit must be between 1 and 100' }]);
+        throw new ValidationError('limit', 'Limit must be between 1 and 100');
       }
 
       const history = await chatService.getConversationHistory(session_id, limitNum);
@@ -113,7 +113,7 @@ export function createChatRouter(pool: Pool): express.Router {
       const { session_id } = req.body;
 
       if (!session_id || typeof session_id !== 'string') {
-        throw new ValidationError('session_id is required', [{ field: 'session_id', message: 'session_id is required' }]);
+        throw new ValidationError('session_id', 'session_id is required');
       }
 
       const deletedCount = await chatService.clearSession(session_id);

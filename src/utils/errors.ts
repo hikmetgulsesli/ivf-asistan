@@ -1,38 +1,44 @@
 export class AppError extends Error {
-  public readonly code: string;
-  public readonly statusCode: number;
-
-  constructor(code: string, message: string, statusCode = 500) {
+  constructor(
+    public code: string,
+    message: string,
+    public statusCode: number = 500
+  ) {
     super(message);
-    this.code = code;
-    this.statusCode = statusCode;
     this.name = 'AppError';
   }
 }
 
-export class ValidationError extends AppError {
-  public readonly details: Array<{ field: string; message: string }>;
+export interface ValidationDetail {
+  field: string;
+  message: string;
+}
 
-  constructor(message: string, details: Array<{ field: string; message: string }> = []) {
-    super('VALIDATION_ERROR', message, 400);
-    this.details = details;
+export class ValidationError extends AppError {
+  public readonly field?: string;
+  public readonly details?: ValidationDetail[];
+
+  constructor(field: string | ValidationDetail[], message?: string) {
+    if (Array.isArray(field)) {
+      super('VALIDATION_ERROR', message || 'Validation failed', 400);
+      this.details = field;
+    } else {
+      super('VALIDATION_ERROR', message || 'Validation failed', 400);
+      this.field = field;
+    }
   }
 }
 
 export class UnauthorizedError extends AppError {
-  constructor(message = 'Unauthorized') {
+  constructor(message: string) {
     super('UNAUTHORIZED', message, 401);
-  }
-}
-
-export class ForbiddenError extends AppError {
-  constructor(message = 'Forbidden') {
-    super('FORBIDDEN', message, 403);
+    this.name = 'UnauthorizedError';
   }
 }
 
 export class NotFoundError extends AppError {
   constructor(resource: string, id: string | number) {
     super('NOT_FOUND', `${resource} with id ${id} not found`, 404);
+    this.name = 'NotFoundError';
   }
 }
