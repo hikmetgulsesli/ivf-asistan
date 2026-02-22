@@ -1,3 +1,5 @@
+import path from 'path';
+import { fileURLToPath } from 'url';
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -38,6 +40,15 @@ app.use('/api', createChatRouter(pool));
 app.use('/api', createCategoriesRouter(pool));
 app.use('/api', createSuggestionsRouter(pool));
 app.use('/api', createFeedbackRouter(pool));
+
+
+// Serve client build (production)
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const clientDist = path.join(__dirname, '../../client/dist');
+app.use(express.static(clientDist));
+app.get('*', (_req, res) => {
+  res.sendFile(path.join(clientDist, 'index.html'));
+});
 
 app.use(errorHandler);
 
