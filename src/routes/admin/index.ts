@@ -1,6 +1,7 @@
 import express from 'express';
 import { Pool } from 'pg';
 import { authMiddleware } from '../../middleware/auth';
+import { createVideosRouter } from './videos';
 
 const router = express.Router();
 
@@ -106,6 +107,39 @@ export function createAdminRouter(pool: Pool): express.Router {
       next(error);
     }
   });
+
+  router.get('/cache-stats', async (_req, res, next) => {
+    try {
+      const statsResult = await pool.query(
+        `SELECT
+          COUNT(*) AS total,
+          COALESCE(SUM(hit_count), 0) AS total_hits,
+          COUNT(*) FILTER (WHERE expires_at <= NOW()) AS expired
+        FROM response_cache`
+      );
+
+      const totalEntries = parseInt(statsResult.rows[0].total, 10);
+      const totalHits = parseInt(statsResult.rows[0].total_hits, 10);
+      const expiredEntries = parseInt(statsResult.rows[0].expired, 10);
+      const activeEntries = totalEntries - expiredEntries;
+      const avgHits = totalEntries > 0 ? Math.round((totalHits / totalEntries) * 100) / 100 : 0;
+
+      res.json({
+        data: {
+          totalEntries,
+          activeEntries,
+          expiredEntries,
+          totalHits,
+          avgHits,
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // Mount videos router
+  router.use('/videos', createVideosRouter(pool));
 
   return router;
 }
