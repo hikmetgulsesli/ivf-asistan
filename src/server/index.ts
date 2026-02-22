@@ -39,9 +39,12 @@ app.use('/api', createFeedbackRouter(pool));
 
 app.use(errorHandler);
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// Only start server if not in test mode
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
 
 process.on('SIGTERM', async () => {
   console.log('SIGTERM received, closing database connection...');
