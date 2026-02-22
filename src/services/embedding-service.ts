@@ -192,3 +192,15 @@ export async function generateEmbedding(text: string): Promise<{ embedding: numb
     usage: data.usage || { prompt_tokens: 0, total_tokens: 0 },
   };
 }
+
+// Standalone function for embedding generation with timing
+export async function generateEmbeddingWithTiming(text: string): Promise<{ result: { embedding: number[]; usage: { prompt_tokens: number; total_tokens: number } }; durationMs: number }> {
+  const startTime = Date.now();
+  const result = await generateEmbedding(text);
+  const durationMs = Date.now() - startTime;
+  
+  return {
+    result,
+    durationMs,
+  };
+}

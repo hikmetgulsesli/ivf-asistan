@@ -1,18 +1,15 @@
-import path from 'path';
-import { fileURLToPath } from 'url';
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { Pool } from 'pg';
-import { config } from '../config/index.js';
-import { errorHandler } from '../middleware/error-handler.js';
-import { createAdminAuthRouter } from '../routes/admin/auth.js';
-import { createAdminRouter } from '../routes/admin/index.js';
-import { createChatRouter } from '../routes/chat.js';
-import { createCategoriesRouter } from '../routes/categories.js';
-import { createSuggestionsRouter } from '../routes/suggestions.js';
-import { createFeedbackRouter } from '../routes/feedback.js';
-import { createVideosRouter } from '../routes/admin/videos.js';
+import { config } from '../config/index';
+import { errorHandler } from '../middleware/error-handler';
+import { createAdminAuthRouter } from '../routes/admin/auth';
+import { createAdminRouter } from '../routes/admin/index';
+import { createChatRouter } from '../routes/chat';
+import { createCategoriesRouter } from '../routes/categories';
+import { createSuggestionsRouter } from '../routes/suggestions';
+import { createFeedbackRouter } from '../routes/feedback';
 
 dotenv.config();
 
@@ -34,26 +31,11 @@ app.get('/api/health', (_req, res) => {
 
 app.use('/api/admin', createAdminAuthRouter(pool));
 app.use('/api/admin', createAdminRouter(pool));
-app.use('/api/admin/videos', createVideosRouter(pool));
 
 app.use('/api', createChatRouter(pool));
 app.use('/api', createCategoriesRouter(pool));
 app.use('/api', createSuggestionsRouter(pool));
 app.use('/api', createFeedbackRouter(pool));
-
-// Serve client build (production only)
-if (process.env.NODE_ENV === 'production') {
-  const __dirname = path.dirname(fileURLToPath(import.meta.url));
-  const clientDist = path.join(__dirname, '../../client/dist');
-  app.use(express.static(clientDist));
-  app.get('*', (req, res, next) => {
-    // Let API routes fall through to subsequent middleware (e.g., 404/error handlers)
-    if (req.path === '/api' || req.path.startsWith('/api/')) {
-      return next();
-    }
-    res.sendFile(path.join(clientDist, 'index.html'));
-  });
-}
 
 app.use(errorHandler);
 
