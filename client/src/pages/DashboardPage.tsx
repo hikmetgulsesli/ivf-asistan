@@ -66,7 +66,7 @@ export function DashboardPage() {
   if (error) {
     return (
       <div className="p-6">
-        <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-600">
+        <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400">
           {error}
         </div>
       </div>
@@ -79,6 +79,16 @@ export function DashboardPage() {
     { label: 'Videos', value: stats?.videos ?? 0, icon: Video, color: '#f59e0b' },
     { label: 'Conversations', value: stats?.conversations ?? 0, icon: MessageCircle, color: '#8b5cf6' },
   ];
+
+  const isDark = document.documentElement.classList.contains('dark');
+  const tooltipStyle = {
+    backgroundColor: isDark ? '#292524' : '#fff',
+    border: `1px solid ${isDark ? '#44403c' : '#e2e8f0'}`,
+    borderRadius: '8px',
+    fontSize: '12px',
+    color: isDark ? '#fafaf9' : '#292524',
+  };
+  const axisColor = isDark ? '#a8a29e' : '#64748b';
 
   return (
     <div className="p-8">
@@ -94,7 +104,7 @@ export function DashboardPage() {
         {statCards.map((card) => (
           <div
             key={card.label}
-            className="bg-white p-6 rounded-xl border border-[var(--border)] shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] transition-shadow duration-200"
+            className="bg-[var(--card)] p-6 rounded-xl border border-[var(--border)] shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] transition-shadow duration-200"
           >
             <div className="flex items-center justify-between">
               <div>
@@ -115,7 +125,7 @@ export function DashboardPage() {
       </div>
 
       {/* Cache Stats */}
-      <div className="bg-white p-6 rounded-xl border border-[var(--border)] shadow-[var(--shadow-sm)] mb-8">
+      <div className="bg-[var(--card)] p-6 rounded-xl border border-[var(--border)] shadow-[var(--shadow-sm)] mb-8">
         <div className="flex items-center gap-3 mb-4">
           <Database className="w-5 h-5 text-[var(--text-muted)]" />
           <h2 className="text-lg font-semibold" style={{ fontFamily: 'var(--font-heading)' }}>
@@ -147,7 +157,7 @@ export function DashboardPage() {
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Top Questions */}
-        <div className="bg-white p-6 rounded-xl border border-[var(--border)] shadow-[var(--shadow-sm)]">
+        <div className="bg-[var(--card)] p-6 rounded-xl border border-[var(--border)] shadow-[var(--shadow-sm)]">
           <div className="flex items-center gap-3 mb-6">
             <TrendingUp className="w-5 h-5 text-[var(--text-muted)]" />
             <h2 className="text-lg font-semibold" style={{ fontFamily: 'var(--font-heading)' }}>
@@ -158,23 +168,16 @@ export function DashboardPage() {
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={topQuestions} layout="vertical" margin={{ left: 20 }}>
-                  <XAxis type="number" fontSize={12} stroke="#64748b" />
+                  <XAxis type="number" fontSize={12} stroke={axisColor} />
                   <YAxis
                     type="category"
                     dataKey="question"
                     fontSize={11}
-                    stroke="#64748b"
+                    stroke={axisColor}
                     width={150}
-                    tick={{ fill: '#64748b' }}
+                    tick={{ fill: axisColor }}
                   />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: '#fff',
-                      border: '1px solid #e2e8f0',
-                      borderRadius: '8px',
-                      fontSize: '12px',
-                    }}
-                  />
+                  <Tooltip contentStyle={tooltipStyle} />
                   <Bar dataKey="count" fill="#2563eb" radius={[0, 4, 4, 0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -187,7 +190,7 @@ export function DashboardPage() {
         </div>
 
         {/* Sentiment Distribution */}
-        <div className="bg-white p-6 rounded-xl border border-[var(--border)] shadow-[var(--shadow-sm)]">
+        <div className="bg-[var(--card)] p-6 rounded-xl border border-[var(--border)] shadow-[var(--shadow-sm)]">
           <div className="flex items-center gap-3 mb-6">
             <TrendingUp className="w-5 h-5 text-[var(--text-muted)]" />
             <h2 className="text-lg font-semibold" style={{ fontFamily: 'var(--font-heading)' }}>
@@ -215,14 +218,7 @@ export function DashboardPage() {
                       />
                     ))}
                   </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: '#fff',
-                      border: '1px solid #e2e8f0',
-                      borderRadius: '8px',
-                      fontSize: '12px',
-                    }}
-                  />
+                  <Tooltip contentStyle={tooltipStyle} />
                 </PieChart>
               </ResponsiveContainer>
               <div className="flex-1 space-y-3">

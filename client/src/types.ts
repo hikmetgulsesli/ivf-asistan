@@ -59,3 +59,29 @@ export interface Conversation {
   last_activity: string;
   last_sentiment?: string;
 }
+
+// Chat types
+export interface ChatResponse {
+  answer: string;
+  sources: ChatSource[];
+  sentiment: string;
+  isEmergency: boolean;
+  emergencyMessage?: string;
+}
+
+export interface ChatSource {
+  type: string;
+  id: number;
+  title: string;
+  url?: string;
+  category: string;
+}
+
+export interface ChatHistoryItem {
+  id: number;
+  role: 'user' | 'assistant';
+  content: string;
+  sources?: ChatSource[];
+  sentiment?: string;
+  created_at: string;
+}

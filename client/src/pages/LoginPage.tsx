@@ -26,7 +26,7 @@ export function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[var(--surface)]">
-      <div className="w-full max-w-md p-8 bg-white rounded-2xl shadow-[var(--shadow-md)]">
+      <div className="w-full max-w-md p-8 bg-[var(--card)] rounded-2xl shadow-[var(--shadow-md)]">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-[var(--text)]" style={{ fontFamily: 'var(--font-heading)' }}>
             IVF Asistan
@@ -36,7 +36,7 @@ export function LoginPage() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {error && (
-            <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400 text-sm">
               {error}
             </div>
           )}

@@ -35,7 +35,7 @@ export class CacheService {
     }
 
     await this.pool.query(
-      'UPDATE response_cache SET hit_count = hit_count + 1 WHERE id = $1',
+      'UPDATE response_cache SET hit_count = response_cache.hit_count + 1 WHERE id = $1',
       [result.rows[0].id]
     );
 
@@ -60,7 +60,7 @@ export class CacheService {
          response = EXCLUDED.response,
          sources = EXCLUDED.sources,
          expires_at = EXCLUDED.expires_at,
-         hit_count = hit_count + 1`,
+         hit_count = response_cache.hit_count + 1`,
       [queryHash, query, response, JSON.stringify(sources), expiresAt]
     );
   }

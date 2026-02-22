@@ -55,7 +55,7 @@ export class EmbeddingService {
   async generateEmbedding(text: string): Promise<number[]> {
     try {
       const response = await this.client.embeddings.create({
-        model: 'embo-01',
+        model: 'MiniMax-Text-01',
         input: text,
       });
 
@@ -168,7 +168,7 @@ export async function generateEmbedding(text: string): Promise<{ embedding: numb
       'Authorization': `Bearer ${config.minimaxApiKey}`,
     },
     body: JSON.stringify({
-      model: 'abab6.5s-chat',
+      model: 'MiniMax-Text-01',
       input: text,
     }),
   });

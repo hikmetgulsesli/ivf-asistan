@@ -5,6 +5,7 @@
   --accent: #0891b2;
   --surface: #fffbeb;
   --surface-dark: #1c1917;
+  --card: #ffffff;
   --text: #292524;
   --text-muted: #78716c;
   --border: #e7e5e4;
@@ -32,10 +33,17 @@
 }
 
 .dark {
+  --primary: #10b981;
+  --primary-hover: #059669;
+  --accent: #22d3ee;
   --surface: #1c1917;
+  --surface-dark: #0c0a09;
+  --card: #292524;
   --text: #fafaf9;
   --text-muted: #a8a29e;
   --border: #44403c;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 /* Base styles */
@@ -51,6 +59,12 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 600;
   letter-spacing: -0.02em;
   text-wrap: balance;
+}
+
+/* Form elements inherit theme */
+input, textarea, select {
+  background-color: var(--card);
+  color: var(--text);
 }
 
 /* Animation standards - applied to interactive elements only */

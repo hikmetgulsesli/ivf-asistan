@@ -20,7 +20,8 @@ KURALLAR:
 9. Hasta korku içindeyse (fearful), önce sakinleştirici mesaj ver.
 10. Hasta endişeliyse (anxious), empatik giriş yap, sonra bilgiyi sun.
 11. Hasta umutluysa (hopeful), pozitif ama gerçekçi destek ver.
-12. Her zaman kaynaklarla destekli bilgi ver.`;
+12. Her zaman kaynaklarla destekli bilgi ver.
+13. Markdown formatı KULLANMA. Başlık (#), kalın (**), italik (*), liste (-) gibi işaretler kullanma. Düz metin yaz.`;
 
 interface ChatContext {
   articles: ArticleRecord[];
@@ -40,6 +41,10 @@ interface ChatResponse {
   sentiment: Sentiment;
   isEmergency: boolean;
   emergencyMessage?: string;
+}
+
+function stripThinkTags(text: string): string {
+  return text.replace(/<think>[\s\S]*?<\/think>\s*/g, '').trim();
 }
 
 export class ChatService {
@@ -103,7 +108,7 @@ export class ChatService {
       const emergency = this.emergencyService.detect(message);
 
       return {
-        answer: cachedResponse.response,
+        answer: stripThinkTags(cachedResponse.response),
         sources: cachedResponse.sources,
         sentiment: sentiment.sentiment,
         isEmergency: emergency.isEmergency,
@@ -138,13 +143,29 @@ export class ChatService {
 
     const context = await this.getContext();
 
-    const searchResults = await this.embeddingService.search(
-      message,
-      context.articles,
-      context.faqs,
-      context.videos,
-      5
-    );
+    // Graceful degradation: if embedding search fails, continue without search results
+    let searchResults: Array<{
+      id: number;
+      type: 'article' | 'faq' | 'video';
+      title: string;
+      content?: string;
+      url?: string;
+      category: string;
+      score: number;
+      metadata?: Record<string, unknown>;
+    }> = [];
+
+    try {
+      searchResults = await this.embeddingService.search(
+        message,
+        context.articles,
+        context.faqs,
+        context.videos,
+        5
+      );
+    } catch (error) {
+      console.warn('Embedding search failed, continuing without context:', error instanceof Error ? error.message : error);
+    }
 
     console.log(`Found ${searchResults.length} relevant results`);
 
@@ -162,7 +183,8 @@ export class ChatService {
       max_tokens: 1000,
     });
 
-    const answer = completion.choices[0]?.message?.content || '';
+    const rawAnswer = completion.choices[0]?.message?.content || '';
+    const answer = stripThinkTags(rawAnswer);
 
     const sources: Array<{
       type: 'article' | 'faq' | 'video';

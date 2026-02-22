@@ -4,10 +4,10 @@ import { getVideos, createVideo, updateVideo, deleteVideo, getVideoAnalysis } fr
 import type { Video } from '../types';
 
 const STATUS_COLORS: Record<string, string> = {
-  pending: 'bg-slate-100 text-slate-700',
-  processing: 'bg-yellow-100 text-yellow-700',
-  done: 'bg-green-100 text-green-700',
-  error: 'bg-red-100 text-red-700',
+  pending: 'bg-stone-100 dark:bg-stone-700 text-stone-700 dark:text-stone-300',
+  processing: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400',
+  done: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400',
+  error: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400',
 };
 
 export function VideosPage() {
@@ -111,7 +111,7 @@ export function VideosPage() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white p-4 rounded-xl border border-[var(--border)] shadow-[var(--shadow-sm)] mb-6">
+      <div className="bg-[var(--card)] p-4 rounded-xl border border-[var(--border)] shadow-[var(--shadow-sm)] mb-6">
         <div className="flex flex-wrap gap-4">
           <select
             value={analysisStatus}
@@ -128,13 +128,13 @@ export function VideosPage() {
       </div>
 
       {error && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 mb-6">
+        <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400 mb-6">
           {error}
         </div>
       )}
 
       {/* Table */}
-      <div className="bg-white rounded-xl border border-[var(--border)] shadow-[var(--shadow-sm)] overflow-hidden">
+      <div className="bg-[var(--card)] rounded-xl border border-[var(--border)] shadow-[var(--shadow-sm)] overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center h-64">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--primary)]"></div>
@@ -174,7 +174,7 @@ export function VideosPage() {
                       </a>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="px-3 py-1 text-xs font-medium rounded-full bg-slate-100 text-slate-700 capitalize">
+                      <span className="px-3 py-1 text-xs font-medium rounded-full bg-stone-100 dark:bg-stone-700 text-stone-700 dark:text-stone-300 capitalize">
                         {video.category}
                       </span>
                     </td>
@@ -193,20 +193,20 @@ export function VideosPage() {
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => viewAnalysis(video)}
-                          className="p-2 text-[var(--text-muted)] hover:text-[var(--primary)] hover:bg-blue-50 rounded-lg transition-colors duration-150 cursor-pointer"
+                          className="p-2 text-[var(--text-muted)] hover:text-[var(--primary)] hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors duration-150 cursor-pointer"
                           title="View Analysis"
                         >
                           <Eye className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => openEdit(video)}
-                          className="p-2 text-[var(--text-muted)] hover:text-[var(--primary)] hover:bg-blue-50 rounded-lg transition-colors duration-150 cursor-pointer"
+                          className="p-2 text-[var(--text-muted)] hover:text-[var(--primary)] hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors duration-150 cursor-pointer"
                         >
                           <Edit className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleDelete(video.id)}
-                          className="p-2 text-[var(--text-muted)] hover:text-[var(--error)] hover:bg-red-50 rounded-lg transition-colors duration-150 cursor-pointer"
+                          className="p-2 text-[var(--text-muted)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors duration-150 cursor-pointer"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -223,7 +223,7 @@ export function VideosPage() {
       {/* Add/Edit Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-xl">
+          <div className="bg-[var(--card)] rounded-2xl w-full max-w-xl">
             <div className="flex items-center justify-between p-6 border-b border-[var(--border)]">
               <h2 className="text-xl font-semibold" style={{ fontFamily: 'var(--font-heading)' }}>
                 {editingVideo ? 'Edit Video' : 'New Video'}
@@ -295,7 +295,7 @@ export function VideosPage() {
       {/* Analysis Modal */}
       {showAnalysisModal && viewingVideo && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+          <div className="bg-[var(--card)] rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-6 border-b border-[var(--border)]">
               <h2 className="text-xl font-semibold" style={{ fontFamily: 'var(--font-heading)' }}>
                 Video Analysis
@@ -342,7 +342,7 @@ export function VideosPage() {
               {viewingVideo.error_message && (
                 <div>
                   <h3 className="text-sm font-medium text-[var(--text-muted)] mb-2">Error</h3>
-                  <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-600">
+                  <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400">
                     {viewingVideo.error_message}
                   </div>
                 </div>

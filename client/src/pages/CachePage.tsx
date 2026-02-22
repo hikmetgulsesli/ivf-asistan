@@ -30,7 +30,7 @@ export function CachePage() {
     const confirmMessage = pattern
       ? `Are you sure you want to clear cache entries matching "${pattern}"?`
       : 'Are you sure you want to clear ALL cache entries?';
-    
+
     if (!confirm(confirmMessage)) return;
 
     setClearing(true);
@@ -66,19 +66,19 @@ export function CachePage() {
       </div>
 
       {error && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 mb-6">
+        <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400 mb-6">
           {error}
         </div>
       )}
 
       {cleared && (
-        <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-green-600 mb-6">
+        <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-green-600 dark:text-green-400 mb-6">
           Cache cleared successfully!
         </div>
       )}
 
       {/* Cache Stats */}
-      <div className="bg-white p-6 rounded-xl border border-[var(--border)] shadow-[var(--shadow-sm)] mb-8">
+      <div className="bg-[var(--card)] p-6 rounded-xl border border-[var(--border)] shadow-[var(--shadow-sm)] mb-8">
         <div className="flex items-center gap-3 mb-6">
           <Database className="w-5 h-5 text-[var(--text-muted)]" />
           <h2 className="text-lg font-semibold" style={{ fontFamily: 'var(--font-heading)' }}>
@@ -86,13 +86,13 @@ export function CachePage() {
           </h2>
           <button
             onClick={loadStats}
-            className="ml-auto p-2 text-[var(--text-muted)] hover:text-[var(--primary)] hover:bg-blue-50 rounded-lg transition-colors duration-150 cursor-pointer"
+            className="ml-auto p-2 text-[var(--text-muted)] hover:text-[var(--primary)] hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors duration-150 cursor-pointer"
             title="Refresh"
           >
             <RefreshCw className="w-4 h-4" />
           </button>
         </div>
-        
+
         <div className="grid grid-cols-3 gap-6 mb-6">
           <div className="p-4 bg-[var(--surface)] rounded-lg">
             <p className="text-sm text-[var(--text-muted)]">Total Entries</p>
@@ -130,9 +130,9 @@ export function CachePage() {
       </div>
 
       {/* Clear Cache */}
-      <div className="bg-white p-6 rounded-xl border border-[var(--border)] shadow-[var(--shadow-sm)]">
+      <div className="bg-[var(--card)] p-6 rounded-xl border border-[var(--border)] shadow-[var(--shadow-sm)]">
         <div className="flex items-center gap-3 mb-6">
-          <Trash2 className="w-5 h-5 text-[var(--error)]" />
+          <Trash2 className="w-5 h-5 text-red-500" />
           <h2 className="text-lg font-semibold" style={{ fontFamily: 'var(--font-heading)' }}>
             Clear Cache
           </h2>
@@ -158,7 +158,7 @@ export function CachePage() {
           <button
             onClick={handleClear}
             disabled={clearing}
-            className="flex items-center gap-2 px-6 py-3 bg-[var(--error)] text-white rounded-lg hover:bg-red-600 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Trash2 className="w-5 h-5" />
             {clearing ? 'Clearing...' : 'Clear Cache'}

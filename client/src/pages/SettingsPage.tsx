@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Palette, FileText, Save } from 'lucide-react';
+import { FileText, Save } from 'lucide-react';
 import { getSettings, updateSettings } from '../services/api';
 
 export function SettingsPage() {
@@ -81,27 +81,27 @@ export function SettingsPage() {
       </div>
 
       {error && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 mb-6">
+        <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400 mb-6">
           {error}
         </div>
       )}
 
       {saved && (
-        <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-green-600 mb-6">
+        <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-green-600 dark:text-green-400 mb-6">
           Settings saved successfully!
         </div>
       )}
 
       <div className="space-y-6">
         {/* System Prompt */}
-        <div className="bg-white p-6 rounded-xl border border-[var(--border)] shadow-[var(--shadow-sm)]">
+        <div className="bg-[var(--card)] p-6 rounded-xl border border-[var(--border)] shadow-[var(--shadow-sm)]">
           <div className="flex items-center gap-3 mb-6">
             <FileText className="w-5 h-5 text-[var(--primary)]" />
             <h2 className="text-lg font-semibold" style={{ fontFamily: 'var(--font-heading)' }}>
               System Prompt
             </h2>
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-[var(--text)] mb-2">
               Custom system prompt for AI responses
@@ -127,78 +127,14 @@ export function SettingsPage() {
           </div>
         </div>
 
-        {/* Theme Settings */}
-        <div className="bg-white p-6 rounded-xl border border-[var(--border)] shadow-[var(--shadow-sm)]">
-          <div className="flex items-center gap-3 mb-6">
-            <Palette className="w-5 h-5 text-[var(--primary)]" />
-            <h2 className="text-lg font-semibold" style={{ fontFamily: 'var(--font-heading)' }}>
-              Appearance
-            </h2>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-[var(--text)] mb-2">
-                Theme
-              </label>
-              <select
-                value={formData.theme}
-                onChange={(e) => setFormData({ ...formData, theme: e.target.value })}
-                className="w-full px-4 py-3 border border-[var(--border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
-              >
-                <option value="light">Light</option>
-                <option value="dark">Dark</option>
-                <option value="system">System</option>
-              </select>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-[var(--text)] mb-2">
-                Primary Color
-              </label>
-              <div className="flex items-center gap-3">
-                <input
-                  type="color"
-                  value={formData.primary_color}
-                  onChange={(e) => setFormData({ ...formData, primary_color: e.target.value })}
-                  className="w-12 h-12 border border-[var(--border)] rounded-lg cursor-pointer"
-                />
-                <input
-                  type="text"
-                  value={formData.primary_color}
-                  onChange={(e) => setFormData({ ...formData, primary_color: e.target.value })}
-                  className="flex-1 px-4 py-3 border border-[var(--border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] font-mono text-sm"
-                />
-              </div>
-            </div>
-          </div>
 
-          {/* Preview */}
-          <div className="mt-6 p-4 bg-[var(--surface)] rounded-lg">
-            <p className="text-sm text-[var(--text-muted)] mb-3">Preview</p>
-            <div className="flex items-center gap-4">
-              <div
-                className="px-4 py-2 rounded-lg text-white font-medium"
-                style={{ backgroundColor: formData.primary_color }}
-              >
-                Primary Button
-              </div>
-              <div
-                className="px-4 py-2 rounded-lg border-2 font-medium"
-                style={{ borderColor: formData.primary_color, color: formData.primary_color }}
-              >
-                Secondary Button
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
 }
 
 function getDefaultSystemPrompt(): string {
-  return `Sen IVF (Tüp Bebek) klinikleri için geliştirilmiş bir hasta asistanısın. 
+  return `Sen IVF (Tüp Bebek) klinikleri için geliştirilmiş bir hasta asistanısın.
 
 Görevin hastaların IVF süreci hakkındaki sorularını yanıtlamak, onlara bilgi ve destek sağlamaktır.
 

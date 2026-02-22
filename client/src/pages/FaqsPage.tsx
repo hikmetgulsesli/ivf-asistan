@@ -47,7 +47,7 @@ function SortableFaqItem({ id, faq, onEdit, onDelete }: SortableItemProps) {
     <div
       ref={setNodeRef}
       style={style}
-      className={`bg-white p-4 rounded-xl border border-[var(--border)] shadow-[var(--shadow-sm)] mb-3 ${
+      className={`bg-[var(--card)] p-4 rounded-xl border border-[var(--border)] shadow-[var(--shadow-sm)] mb-3 ${
         isDragging ? 'shadow-lg z-10' : ''
       }`}
     >
@@ -62,20 +62,20 @@ function SortableFaqItem({ id, faq, onEdit, onDelete }: SortableItemProps) {
         <div className="flex-1">
           <div className="font-medium text-[var(--text)]">{faq.question}</div>
           <div className="text-sm text-[var(--text-muted)] mt-1 line-clamp-2">{faq.answer}</div>
-          <span className="inline-block mt-2 px-2 py-1 text-xs font-medium rounded-full bg-slate-100 text-slate-600 capitalize">
+          <span className="inline-block mt-2 px-2 py-1 text-xs font-medium rounded-full bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 capitalize">
             {faq.category}
           </span>
         </div>
         <div className="flex items-center gap-1">
           <button
             onClick={() => onEdit(faq)}
-            className="p-2 text-[var(--text-muted)] hover:text-[var(--primary)] hover:bg-blue-50 rounded-lg transition-colors duration-150 cursor-pointer"
+            className="p-2 text-[var(--text-muted)] hover:text-[var(--primary)] hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors duration-150 cursor-pointer"
           >
             <Edit className="w-4 h-4" />
           </button>
           <button
             onClick={() => onDelete(faq.id)}
-            className="p-2 text-[var(--text-muted)] hover:text-[var(--error)] hover:bg-red-50 rounded-lg transition-colors duration-150 cursor-pointer"
+            className="p-2 text-[var(--text-muted)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors duration-150 cursor-pointer"
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -199,20 +199,20 @@ export function FaqsPage() {
       </div>
 
       {error && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 mb-6">
+        <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400 mb-6">
           {error}
         </div>
       )}
 
       {/* Reorder hint */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-        <p className="text-sm text-blue-700">
+      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
+        <p className="text-sm text-blue-700 dark:text-blue-400">
           <strong>Tip:</strong> Drag and drop to reorder FAQs. The order is saved automatically.
         </p>
       </div>
 
       {/* FAQ List */}
-      <div className="bg-white rounded-xl border border-[var(--border)] shadow-[var(--shadow-sm)] p-6">
+      <div className="bg-[var(--card)] rounded-xl border border-[var(--border)] shadow-[var(--shadow-sm)] p-6">
         {loading ? (
           <div className="flex items-center justify-center h-64">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--primary)]"></div>
@@ -245,7 +245,7 @@ export function FaqsPage() {
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-xl">
+          <div className="bg-[var(--card)] rounded-2xl w-full max-w-xl">
             <div className="flex items-center justify-between p-6 border-b border-[var(--border)]">
               <h2 className="text-xl font-semibold" style={{ fontFamily: 'var(--font-heading)' }}>
                 {editingFaq ? 'Edit FAQ' : 'New FAQ'}

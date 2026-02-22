@@ -1,4 +1,4 @@
-import type { Article, FAQ, Video, DashboardStats, TopQuestion, SentimentData, Conversation } from '../types';
+import type { Article, FAQ, Video, DashboardStats, TopQuestion, SentimentData, Conversation, ChatResponse, ChatHistoryItem } from '../types';
 
 const API_BASE = '/api/admin';
 
@@ -42,12 +42,12 @@ export async function login(username: string, password: string): Promise<{ token
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username, password }),
   });
-  
+
   if (!response.ok) {
     const error = await response.json().catch(() => ({ error: { message: 'Login failed' } }));
     throw new Error(error.error?.message || 'Login failed');
   }
-  
+
   const data = await response.json();
   if (data.data?.token) {
     localStorage.setItem('adminToken', data.data.token);
@@ -86,7 +86,7 @@ export async function getArticles(params: { search?: string; category?: string; 
   if (params.status) query.set('status', params.status);
   if (params.limit) query.set('limit', String(params.limit));
   if (params.offset) query.set('offset', String(params.offset));
-  
+
   return request(`${API_BASE}/articles?${query}`);
 }
 
@@ -155,7 +155,7 @@ export async function getVideos(params: { analysis_status?: string; limit?: numb
   if (params.analysis_status) query.set('analysis_status', params.analysis_status);
   if (params.limit) query.set('limit', String(params.limit));
   if (params.offset) query.set('offset', String(params.offset));
-  
+
   return request(`${API_BASE}/videos?${query}`);
 }
 
@@ -208,4 +208,56 @@ export async function clearCache(pattern?: string): Promise<{ deleted: number; p
     method: 'DELETE',
   });
   return response.data;
+}
+
+// Chat (uses /api/chat, not /api/admin — no auth required)
+export async function sendChatMessage(
+  message: string,
+  session_id: string,
+  stage?: string
+): Promise<ChatResponse> {
+  const response = await fetch('/api/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message, session_id, stage }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: { message: 'Chat request failed' } }));
+    throw new Error(error.error?.message || 'Chat request failed');
+  }
+
+  const data = await response.json();
+  return data.data;
+}
+
+export async function getChatHistory(
+  session_id: string,
+  limit = 20
+): Promise<ChatHistoryItem[]> {
+  const response = await fetch(`/api/chat/history?session_id=${encodeURIComponent(session_id)}&limit=${limit}`);
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: { message: 'Failed to load history' } }));
+    throw new Error(error.error?.message || 'Failed to load history');
+  }
+
+  const data = await response.json();
+  return data.data;
+}
+
+export async function clearChatSession(session_id: string): Promise<{ deleted: number }> {
+  const response = await fetch('/api/chat/session', {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ session_id }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: { message: 'Failed to clear session' } }));
+    throw new Error(error.error?.message || 'Failed to clear session');
+  }
+
+  const data = await response.json();
+  return data.data;
 }

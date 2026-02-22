@@ -8,15 +8,17 @@ import { FaqsPage } from './pages/FaqsPage';
 import { VideosPage } from './pages/VideosPage';
 import { CachePage } from './pages/CachePage';
 import { SettingsPage } from './pages/SettingsPage';
+import { ChatTestPage } from './pages/ChatTestPage';
+import { ApiDocsPage } from './pages/ApiDocsPage';
 import { logout } from './services/api';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const token = localStorage.getItem('adminToken');
-  
+
   if (!token) {
     return <Navigate to="/login" replace />;
   }
-  
+
   return <>{children}</>;
 }
 
@@ -107,6 +109,26 @@ export default function App() {
             <ProtectedRoute>
               <AdminLayout onLogout={handleLogout}>
                 <CachePage />
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/chat-test"
+          element={
+            <ProtectedRoute>
+              <AdminLayout onLogout={handleLogout}>
+                <ChatTestPage />
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/api-docs"
+          element={
+            <ProtectedRoute>
+              <AdminLayout onLogout={handleLogout}>
+                <ApiDocsPage />
               </AdminLayout>
             </ProtectedRoute>
           }
