@@ -1,11 +1,11 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { config } from '../config';
-import { initializeAdmin } from '../services/auth-service';
-import adminAuthRoutes from '../routes/admin/auth';
-import adminRoutes from '../routes/admin/index';
-import { errorHandler } from '../middleware/error-handler';
+import { config } from '../config/index.js';
+import { initializeAdmin } from '../services/auth-service.js';
+import adminAuthRoutes from '../routes/admin/auth.js';
+import adminRoutes from '../routes/admin/index.js';
+import { errorHandler } from '../middleware/error-handler.js';
 
 dotenv.config();
 
@@ -25,6 +25,7 @@ app.use('/api/admin/auth', adminAuthRoutes);
 app.use('/api/admin', adminRoutes);
 app.use(errorHandler);
 
+// Initialize admin and start server
 async function start() {
   try {
     await initializeAdmin();
