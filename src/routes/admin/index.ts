@@ -1,8 +1,8 @@
 import express from 'express';
 import { Pool } from 'pg';
-import { authMiddleware, AuthenticatedRequest } from '../../middleware/auth';
-import { StatsService } from '../../services/stats-service';
-import { ValidationError } from '../../utils/errors';
+import { authMiddleware, AuthenticatedRequest } from '../../middleware/auth.js';
+import { StatsService } from '../../services/stats-service.js';
+import { ValidationError } from '../../utils/errors.js';
 
 const router = express.Router();
 

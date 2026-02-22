@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { config } from '../config';
+import { config } from '../config/index.js';
 
 export interface AdminUser {
   id: number;

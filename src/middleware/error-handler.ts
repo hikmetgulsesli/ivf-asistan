@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { AppError, ValidationError } from '../utils/errors';
+import { AppError, ValidationError } from '../utils/errors.js';
 
 export function errorHandler(
   error: Error | AppError | ValidationError,

@@ -2,8 +2,8 @@ import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { Pool } from 'pg';
-import { config } from '../../config/index';
-import { UnauthorizedError, ValidationError } from '../../utils/errors';
+import { config } from '../../config/index.js';
+import { UnauthorizedError, ValidationError } from '../../utils/errors.js';
 
 const router = express.Router();
 
