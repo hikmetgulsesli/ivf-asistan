@@ -89,7 +89,7 @@ describe('US-001: .env.example created with all required env vars', () => {
     const envExample = readFileSync(join(projectRoot, '.env.example'), 'utf-8');
     expect(envExample).toContain('PORT=');
     expect(envExample).toContain('DATABASE_URL=');
-    expect(envExample).toContain('OPENAI_API_KEY=');
+    expect(envExample).toContain('MINIMAX_API_KEY=');
   });
 });
 

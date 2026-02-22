@@ -7,7 +7,9 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 4520;
 
-app.use(cors());
+app.use(cors({
+  origin: process.env.CORS_ORIGINS?.split(',') || 'http://localhost:5173'
+}));
 app.use(express.json());
 
 app.get('/api/health', (_req, res) => {
