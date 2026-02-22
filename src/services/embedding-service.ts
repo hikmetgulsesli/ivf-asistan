@@ -1,11 +1,15 @@
+import OpenAI from 'openai';
 import { config } from '../config/index.js';
 
-export interface EmbeddingResult {
-  embedding: number[];
-  usage: {
-    prompt_tokens: number;
-    total_tokens: number;
-  };
+export interface SearchResult {
+  id: number;
+  type: 'article' | 'faq' | 'video';
+  title: string;
+  content?: string;
+  url?: string;
+  category: string;
+  score: number;
+  metadata?: Record<string, unknown>;
 }
 
 export interface ArticleRecord {
@@ -14,7 +18,7 @@ export interface ArticleRecord {
   content: string;
   category: string;
   tags: string[];
-  embedding: number[] | null;
+  embedding: number[];
 }
 
 export interface FaqRecord {
@@ -22,7 +26,7 @@ export interface FaqRecord {
   question: string;
   answer: string;
   category: string;
-  embedding: number[] | null;
+  embedding: number[];
 }
 
 export interface VideoRecord {
@@ -30,38 +34,129 @@ export interface VideoRecord {
   title: string;
   url: string;
   category: string;
-  summary: string | null;
+  summary: string;
   key_topics: string[];
   timestamps: Array<{ time: string; topic: string }>;
-  embedding: number[] | null;
+  embedding: number[];
 }
 
-export interface SearchResult {
-  type: 'article' | 'faq' | 'video';
-  id: number;
-  title: string;
-  content?: string;
-  url?: string;
-  category: string;
-  score: number;
+export class EmbeddingService {
+  private client: OpenAI;
+  private apiHost: string;
+
+  constructor(apiKey: string, apiHost: string = 'https://api.minimax.io') {
+    this.client = new OpenAI({
+      apiKey: apiKey,
+      baseURL: `${apiHost}/v1`,
+    });
+    this.apiHost = apiHost;
+  }
+
+  async generateEmbedding(text: string): Promise<number[]> {
+    try {
+      const response = await this.client.embeddings.create({
+        model: 'embo-01',
+        input: text,
+      });
+
+      return response.data[0].embedding;
+    } catch (error) {
+      console.error('Error generating embedding:', error);
+      throw new Error('Failed to generate embedding');
+    }
+  }
+
+  cosineSimilarity(a: number[], b: number[]): number {
+    if (a.length !== b.length) {
+      throw new Error('Vectors must be of the same length');
+    }
+
+    let dotProduct = 0;
+    let normA = 0;
+    let normB = 0;
+
+    for (let i = 0; i < a.length; i++) {
+      dotProduct += a[i] * b[i];
+      normA += a[i] * a[i];
+      normB += b[i] * b[i];
+    }
+
+    if (normA === 0 || normB === 0) {
+      return 0;
+    }
+
+    return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+  }
+
+  async search(
+    query: string,
+    articles: ArticleRecord[],
+    faqs: FaqRecord[],
+    videos: VideoRecord[],
+    limit: number = 5
+  ): Promise<SearchResult[]> {
+    const queryEmbedding = await this.generateEmbedding(query);
+
+    const results: SearchResult[] = [];
+
+    for (const article of articles) {
+      if (!article.embedding) continue;
+      const score = this.cosineSimilarity(queryEmbedding, article.embedding);
+      if (score > 0.3) {
+        results.push({
+          id: article.id,
+          type: 'article',
+          title: article.title,
+          content: article.content,
+          category: article.category,
+          score,
+          metadata: { tags: article.tags },
+        });
+      }
+    }
+
+    for (const faq of faqs) {
+      if (!faq.embedding) continue;
+      const score = this.cosineSimilarity(queryEmbedding, faq.embedding);
+      if (score > 0.3) {
+        results.push({
+          id: faq.id,
+          type: 'faq',
+          title: faq.question,
+          content: faq.answer,
+          category: faq.category,
+          score,
+        });
+      }
+    }
+
+    for (const video of videos) {
+      if (!video.embedding) continue;
+      const score = this.cosineSimilarity(queryEmbedding, video.embedding);
+      if (score > 0.3) {
+        results.push({
+          id: video.id,
+          type: 'video',
+          title: video.title,
+          url: video.url,
+          category: video.category,
+          score,
+          metadata: {
+            summary: video.summary,
+            key_topics: video.key_topics,
+            timestamps: video.timestamps,
+          },
+        });
+      }
+    }
+
+    results.sort((a, b) => b.score - a.score);
+    return results.slice(0, limit);
+  }
 }
 
-interface MiniMaxEmbeddingResponse {
-  data: Array<{
-    embedding: number[];
-  }>;
-  usage?: {
-    prompt_tokens: number;
-    total_tokens: number;
-  };
-}
-
-const EMBEDDING_MODEL = 'abab6.5s-chat';
-
-/**
- * Generate embedding for text using MiniMax API
- */
-export async function generateEmbedding(text: string): Promise<EmbeddingResult> {
+// Standalone function for embedding generation
+export async function generateEmbedding(text: string): Promise<{ embedding: number[]; usage: { prompt_tokens: number; total_tokens: number } }> {
   if (!config.minimaxApiKey) {
     throw new Error('MINIMAX_API_KEY not configured');
   }
@@ -73,7 +168,7 @@ export async function generateEmbedding(text: string): Promise<EmbeddingResult> 
       'Authorization': `Bearer ${config.minimaxApiKey}`,
     },
     body: JSON.stringify({
-      model: EMBEDDING_MODEL,
+      model: 'abab6.5s-chat',
       input: text,
     }),
   });
@@ -83,7 +178,10 @@ export async function generateEmbedding(text: string): Promise<EmbeddingResult> 
     throw new Error(`MiniMax embedding API error: ${response.status} - ${error}`);
   }
 
-  const data = await response.json() as MiniMaxEmbeddingResponse;
+  const data = await response.json() as {
+    data: Array<{ embedding: number[] }>;
+    usage?: { prompt_tokens: number; total_tokens: number };
+  };
   
   if (!data.data || !data.data[0] || !data.data[0].embedding) {
     throw new Error('Invalid embedding response from MiniMax API');
@@ -93,159 +191,4 @@ export async function generateEmbedding(text: string): Promise<EmbeddingResult> 
     embedding: data.data[0].embedding,
     usage: data.usage || { prompt_tokens: 0, total_tokens: 0 },
   };
-}
-
-/**
- * Generate embedding for a single item with performance timing
- */
-export async function generateEmbeddingWithTiming(
-  text: string
-): Promise<{ result: EmbeddingResult; durationMs: number }> {
-  const startTime = Date.now();
-  const result = await generateEmbedding(text);
-  const durationMs = Date.now() - startTime;
-  
-  return { result, durationMs };
-}
-
-/**
- * Calculate cosine similarity between two vectors
- */
-function cosineSimilarity(vec1: number[], vec2: number[]): number {
-  if (vec1.length !== vec2.length) {
-    throw new Error('Vectors must have the same dimension');
-  }
-  
-  if (vec1.length === 0) {
-    throw new Error('Vectors cannot be empty');
-  }
-
-  let dotProduct = 0;
-  let norm1 = 0;
-  let norm2 = 0;
-
-  for (let i = 0; i < vec1.length; i++) {
-    dotProduct += vec1[i] * vec2[i];
-    norm1 += vec1[i] * vec1[i];
-    norm2 += vec2[i] * vec2[i];
-  }
-
-  const normalizedProduct = Math.sqrt(norm1) * Math.sqrt(norm2);
-  
-  if (normalizedProduct === 0) {
-    return 0;
-  }
-
-  return dotProduct / normalizedProduct;
-}
-
-/**
- * EmbeddingService class for semantic search
- */
-export class EmbeddingService {
-  private apiKey: string;
-  private apiHost: string;
-
-  constructor(apiKey: string, apiHost: string) {
-    this.apiKey = apiKey;
-    this.apiHost = apiHost;
-  }
-
-  /**
-   * Generate embedding for text
-   */
-  async generateEmbedding(text: string): Promise<EmbeddingResult> {
-    const response = await fetch(`${this.apiHost}/v1/text/embeddings`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.apiKey}`,
-      },
-      body: JSON.stringify({
-        model: EMBEDDING_MODEL,
-        input: text,
-      }),
-    });
-
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`MiniMax embedding API error: ${response.status} - ${error}`);
-    }
-
-    const data = await response.json() as MiniMaxEmbeddingResponse;
-    
-    if (!data.data || !data.data[0] || !data.data[0].embedding) {
-      throw new Error('Invalid embedding response from MiniMax API');
-    }
-
-    return {
-      embedding: data.data[0].embedding,
-      usage: data.usage || { prompt_tokens: 0, total_tokens: 0 },
-    };
-  }
-
-  /**
-   * Search across articles, FAQs, and videos using semantic similarity
-   */
-  async search(
-    query: string,
-    articles: ArticleRecord[],
-    faqs: FaqRecord[],
-    videos: VideoRecord[],
-    limit: number = 5
-  ): Promise<SearchResult[]> {
-    // Generate embedding for the query
-    const queryEmbedding = await this.generateEmbedding(query);
-    
-    const results: SearchResult[] = [];
-
-    // Search articles
-    for (const article of articles) {
-      if (!article.embedding) continue;
-      
-      const score = cosineSimilarity(queryEmbedding.embedding, article.embedding);
-      results.push({
-        type: 'article',
-        id: article.id,
-        title: article.title,
-        content: article.content,
-        category: article.category,
-        score,
-      });
-    }
-
-    // Search FAQs
-    for (const faq of faqs) {
-      if (!faq.embedding) continue;
-      
-      const score = cosineSimilarity(queryEmbedding.embedding, faq.embedding);
-      results.push({
-        type: 'faq',
-        id: faq.id,
-        title: faq.question,
-        content: faq.answer,
-        category: faq.category,
-        score,
-      });
-    }
-
-    // Search videos
-    for (const video of videos) {
-      if (!video.embedding) continue;
-      
-      const score = cosineSimilarity(queryEmbedding.embedding, video.embedding);
-      results.push({
-        type: 'video',
-        id: video.id,
-        title: video.title,
-        url: video.url,
-        category: video.category,
-        score,
-      });
-    }
-
-    // Sort by score descending and return top results
-    results.sort((a, b) => b.score - a.score);
-    return results.slice(0, limit);
-  }
 }
