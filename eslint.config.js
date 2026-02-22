@@ -16,4 +16,11 @@ export default tseslint.config(
       '@typescript-eslint/no-explicit-any': 'warn',
     },
   },
+  {
+    // Test dosyalarında mevcut relative import'lar için kuralı kapat
+    files: ['**/*.test.{ts,tsx}'],
+    rules: {
+      'no-restricted-syntax': 'off',
+    },
+  },
 );

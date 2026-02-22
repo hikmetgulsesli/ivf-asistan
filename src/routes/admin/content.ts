@@ -1,6 +1,6 @@
 import express from 'express';
 import { Pool } from 'pg';
-import { authMiddleware } from '../../middleware/auth';
+import { authMiddleware } from '../../middleware/auth.js';
 
 const router = express.Router();
 

@@ -1,8 +1,8 @@
 import express from 'express';
 import { Pool } from 'pg';
-import { ChatService } from '../services/chat-service';
-import { config } from '../config/index';
-import { ValidationError } from '../utils/errors';
+import { ChatService } from '../services/chat-service.js';
+import { config } from '../config/index.js';
+import { ValidationError } from '../utils/errors.js';
 
 const router = express.Router();
 
